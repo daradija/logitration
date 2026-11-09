@@ -1,0 +1,14 @@
+Write the Python script `install`: a script that CHANGES the world.
+
+SIGNATURE (write exactly this function):
+def install(world, M, X):
+    """Make true: "{X} is installed on {M}". Arguments are str. Return a short text saying what was done. Raise RuntimeError(message) when it could not be done (never hide a failed command). Safe to run twice."""
+
+The only door to the world:
+  world.run(machine, command, *args)   runs ONE command on ONE machine, without a shell: world.run("m1", "ollama", ...).
+    It returns an object with .rc (int, the exit code), .out (str, stdout) and .err (str, stderr). It raises RuntimeError if the machine is unknown.
+    Commands you may use: ollama. Nothing else is reachable (no files, no network, no subprocess).
+world.machines()                       returns the list of machine names (str).
+Imports allowed: re, json. Define the function install; helpers are allowed.
+
+Answer with the code only.

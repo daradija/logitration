@@ -1,0 +1,21 @@
+10/10 cases
+ok   installed(M=None, X=None)  everything the world says
+       ok
+ok   installed(M='m1', X=None)  as a question
+       ok
+ok   installed(M='m2', X=None)  as a question
+       ok
+ok   installed(M=None, X='llama3')  as a question
+       ok
+ok   installed(M=None, X='mistral')  as a question
+       ok
+ok   installed(M=None, X='qwen2')  as a question
+       ok
+ok   installed(M='m1', X='llama3')  as a question
+       ok
+ok   installed(M='m1', X='mistral')  as a question
+       ok
+ok   installed(M='m2', X='llama3')  as a question
+       ok
+ok   installed(M='m2', X='mistral')  as a question
+       ok

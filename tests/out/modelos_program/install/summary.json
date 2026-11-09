@@ -1,0 +1,24 @@
+{
+ "name": "install",
+ "kind": "act",
+ "level": 2,
+ "accepted": true,
+ "calls": 1,
+ "usd": 0.0111,
+ "attempts": [
+  {
+   "k": 1,
+   "validation": null,
+   "rehearsal": "5/5 cases",
+   "accepted": true,
+   "meta": {
+    "model": "claude-sonnet-5-5",
+    "usd": 0.01106,
+    "tokens_in": 1221,
+    "tokens_out": 618,
+    "ms": 5970
+   }
+  }
+ ],
+ "informe": ""
+}

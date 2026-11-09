@@ -1,0 +1,37 @@
+import re
+
+
+def _installed(world, M, X):
+    r = world.run(M, "ollama", "list")
+    if r.rc != 0:
+        raise RuntimeError("could not list models on %s: %s" % (M, (r.err or r.out).strip()))
+    names = []
+    for i, line in enumerate(r.out.splitlines()):
+        line = line.strip()
+        if not line:
+            continue
+        parts = re.split(r"\s+", line)
+        if i == 0 and parts[0].upper() == "NAME":
+            continue
+        names.append(parts[0])
+    want = X.strip()
+    for n in names:
+        if n == want:
+            return True
+        if ":" not in want and n.split(":")[0] == want:
+            return True
+    return False
+
+
+def install(world, M, X):
+    """Make true: "{X} is installed on {M}"."""
+    if M not in world.machines():
+        raise RuntimeError("unknown machine: %s" % M)
+    if _installed(world, M, X):
+        return "%s is already installed on %s" % (X, M)
+    r = world.run(M, "ollama", "pull", X)
+    if r.rc != 0:
+        raise RuntimeError("could not install %s on %s: %s" % (X, M, (r.err or r.out).strip()))
+    if not _installed(world, M, X):
+        raise RuntimeError("%s not found on %s after pull" % (X, M))
+    return "Done: %s is installed on %s" % (X, M)

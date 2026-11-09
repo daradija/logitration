@@ -1,0 +1,102 @@
+== 1. the idea file
+  [ok  ] circuit: 57 lines in the file (44 not comments), 8 words, 8 client turns, meta: act/2, ask/2, can_change/1, explain/2, missing/1
+  [ok  ] traffic_light: 29 lines in the file (22 not comments), 3 words, 4 client turns, meta: act/2, ask/2, missing/1
+  [ok  ] shop: 42 lines in the file (33 not comments), 5 words, 8 client turns, meta: act/2, can_change/1, explain/2
+  [ok  ] cluster: 51 lines in the file (45 not comments), 11 words, 12 client turns, meta: act/2, ask/2, can_change/1, explain/2, missing/1
+  [ok  ] cluster3: 69 lines in the file (53 not comments), 9 words, 11 client turns, meta: act/2, ask/2, can_change/1, explain/2, missing/1
+  [ok  ] name: and about: are read
+  [ok  ] a word line with [changes; V: ...] becomes a changing phrase with allowed values
+  [ok  ] templates are split on |
+  [ok  ] rules go to Prolog, word lines do not
+  [ok  ] the .logi suffix can be left out
+  [ok  ] bad file -> idea.logi:1: unknown section '== logics' (use: conversation, facts, rules, meta-interprete
+  [ok  ] bad file -> idea.logi:2: unknown option [often] (use: changes; set; V: a b c; not: ...; program via CM
+  [ok  ] bad file -> idea.logi:2: in the conversation each line starts with 'client:' or 'agent:' (or is indent
+  [ok  ] bad file -> idea.logi: the facts/rules sections have no word lines (like  lamp(X) = {X} is a lamp)
+  [ok  ] bad file -> idea.logi:1: before the first '== section' only 'name:' and 'about:' lines are allowed
+  [ok  ] a Prolog error in the logic -> idea.logi:4: missing final period (the clause that starts here never ends with a '.')
+    
+== 2. logi check: the conversation is the test
+  [ok  ] logi check circuit.logi: 8/8 turns answered as written
+  [ok  ] logi check traffic_light.logi: 4/4 turns answered as written
+  [ok  ] logi check shop.logi: 8/8 turns answered as written
+  [ok  ] logi check cluster_v1.logi: 12/12 turns answered as written
+  [ok  ] logi check cluster.logi: 11/11 turns answered as written
+  [ok  ] a wrong expectation fails, with its line, the missing text and what the agent said
+  [ok  ] Spanish alias: logi comprobar
+  [ok  ] a missing file: exit 2 and a clear error
+== 3. the meta-interpreter
+  [ok  ] missing/1 + ask/2: the question is the user's words
+  [ok  ] make: the way is found, act/2 gives the command
+  [ok  ] make on something already true does nothing
+  [ok  ] explain/2 replaces the proof of source(mains)
+  [ok  ] make again after an event
+  [ok  ] can_change/1: the agent refuses what is not its own
+  [ok  ] the `not:` form is understood as a negated event
+  [ok  ] cluster: explain/2 says why j1 does not fit n2, with the numbers
+  [ok  ] cluster: can_change/1 refuses a node where the job does not fit; no command sent
+  [ok  ] cluster: act/2 sends `launch j1 n3` to the device
+  [ok  ] no can_change/1: by default the agent may change any changing fact
+  [ok  ] device(command) is called when the agent acts
+  [ok  ] a device failure: nothing is changed and the client is told
+  [ok  ] make also works as a structured question (data part / ask())
+  [ok  ] make on a goal with a variable asks which one
+  [ok  ] an idea with no meta-interpreter and no conversation works (all defaults)
+  [ok  ] the LLM prompt knows the kind 'make'
+== 4. logi try (input on stdin)
+  [ok  ] the banner says what was loaded (the three meta-interpreters)
+  [ok  ] a question is answered
+  [ok  ] :why and :porque explain the last answer / a goal
+  [ok  ] :facts lists what the agent was told
+  [ok  ] :rules shows the logic and the meta-interpreter with line numbers
+  [ok  ] :example replays the file's conversation
+  [ok  ] unknown commands get the help
+  [ok  ] :quit leaves
+  [ok  ] :reload re-reads the file and replays what was typed
+  [ok  ] python -m logitration probar (alias), real process
+== 5. logi serve (subprocess) and a local client
+  [ok  ] the card is served with the idea's name and about
+  [ok  ] over A2A: the meta-interpreter asks
+  [ok  ] over A2A: make acts
+  [ok  ] logi talk URL message: the same conversation from the command line
+  [ok  ] another session starts empty (alias hablar)
+== 5b. --device runs a real program with the command
+  [ok  ] the device program received 'relay sw up' and its output is shown
+  [ok  ] a failing device program: exit code and message reach the client
+== 6. what the file or the client leaves unsaid is said, not answered blindly
+  [ok  ] case 1: no ram for n2 -> the answer says what it lacks
+  [ok  ] case 1: the lack goes in the data too (missing_info)
+  [ok  ] case 1 control: all told -> a plain answer
+  [ok  ] case 6: no missing/ask -> it loads, and the answer says what it lacks
+  [ok  ] no false alarm for something few things have (feeds)
+  [ok  ] case 5: n9 is not answered No: it says it does not know it
+  [ok  ] case 5: the same for an order about j9
+  [ok  ] case 5 control: a known name is answered
+  [ok  ] case 9: no Python trace: it says what is missing
+  [ok  ] case 3: a rule in a loop -> message after the time limit, no crash
+  [ok  ] case 8: the error says the line, the line itself and the missing dot
+  [ok  ] syntax error -> idea.logi:5: unterminated quote
+  [ok  ] syntax error -> idea.logi:4: extra token '$$$'
+  [ok  ] syntax error -> idea.logi:5: extra token 'lit' (is a final '.' missing at the end of line 4?)
+  [ok  ] case 4: lint says explain is about a predicate with no phrase
+  [ok  ] lint: a meta line that nothing reads
+  [ok  ] lint: a call to something undefined
+  [ok  ] lint: a phrase no rule reads
+  [ok  ] lint: wrong number of arguments
+  [ok  ] lint: act/3 instead of act/2
+  [ok  ] case 2: the forgotten rule is not found, only its symptom (disk and need_disk are read by nobody now)
+  [ok  ] case 7: a too-permissive rule is not invented
+  [ok  ] lint of the example circuit: no errors (one real warning: the fuse phrase)
+  [ok  ] lint of the example traffic_light: no errors
+  [ok  ] lint of the example shop: no errors
+  [ok  ] lint of the example cluster: no errors
+  [ok  ] lint of the example cluster3: no errors
+  [ok  ] logi lint: lists warnings, notes and what the client states
+  [ok  ] logi lint on a file with a syntax error: the line, exit 2
+  [ok  ] logi lint: warnings do not fail (exit 0)
+  [ok  ] logi lint: an error -> exit 1
+  [ok  ] logi try says the lint warnings when it loads the file
+  [ok  ] Spanish alias: revisar
+  [ok  ] :lint inside logi try
+  [ok  ] logi check says the lint warnings before the replay
+checks: 93   failures: 0

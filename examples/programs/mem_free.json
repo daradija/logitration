@@ -1,0 +1,22 @@
+{
+ "name": "mem_free",
+ "kind": "observe",
+ "version": 1,
+ "anchored": "2026-11-08 16:24",
+ "model": "claude-cli sonnet (generated 08-11 by logitration.programmer, 1 attempt; copied from logitration/clorm/programas/mem_free.py)",
+ "attempts": 1,
+ "reason": "memoria.logi:15 needs a script (observe) for «{N} has {MB} MB free»",
+ "says": [
+  "{N} has {MB} MB free"
+ ],
+ "args": [
+  "N",
+  "MB"
+ ],
+ "via": [
+  "vm_stat"
+ ],
+ "level": 2,
+ "sha256": "328395050de90110a18ad3ac62441fc0bd5bea247455cfbfd92bc34ce3f8f0b2",
+ "spec": "PROGRAM mem_free  (observe, marked [program] in its phrase)   memoria.logi:15\n  speaks as : {N} has {MB} MB free\n  fact      : mem_free(N, MB)   commands allowed via: vm_stat\n  names the user uses (conversation and pretend world): none\n  context level 2 (name + signature + your words + conversation examples); 2 conversation turns as examples\n  cases it will be tried on (1):\n     - mem_free(N=None, MB=None)  everything the world says\n\n  --- the prompt, as it goes to the model ---\n  | Write the Python script `mem_free`: a script that LOOKS at the world (read-only) and reports facts.\n  | \n  | SIGNATURE (write exactly this function):\n  | def mem_free(world, N=None, MB=None):\n  |     \"\"\"Return the list of ALL tuples (N, MB) of str that are true now and agree with the arguments that are not None (None means \"any\": it is a variable). Read-only: change nothing. Return [] when nothing matches.\"\"\"\n  | \n  | The only door to the world:\n  |   world.run(machine, command, *args)   runs ONE command on ONE machine, without a shell: world.run(\"m1\", \"vm_stat\", ...).\n  |     It returns an object with .rc (int, the exit code), .out (str, stdout) and .err (str, stderr). It raises RuntimeError if the machine is unknown.\n  |     Commands you may use: vm_stat. Nothing else is reachable (no files, no network, no subprocess).\n  | world.machines()                       returns the list of machine names (str).\n  | Imports allowed: re, json. Define the function mem_free; helpers are allowed.\n  | \n  | What the user wrote about it (memoria.logi, line 15):\n  |   the agent says and understands:  «{N} has {MB} MB free»\n  |   types of the arguments (a row that does not fit is refused before it reaches the rules):  N: a name (lowercase letters, digits and _)   MB: a whole number, 0 or more   (each value is still returned as a str)\n  | The user's conversation with the agent (client asks; the agent must answer with the lines after `agent:`):\n  |   client: where can j1 run?\n  |   agent:  j1 is runnable on n2\n  |   client: where can j2 run?\n  |   agent:  j2 is runnable on n2\n  | \n  | Answer with the code only."
+}

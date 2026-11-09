@@ -1,0 +1,34 @@
+# modelos.logi: an agent that looks after the language models of some machines. The scripts it needs are NOT here.
+#   logi spec modelos.logi          the specification of each script it lacks (no model, nothing written)
+#   logi program modelos.logi       a model writes them: validated, tried in a pretend world, anchored in programs/
+#   logi try modelos.logi --program talk to it, now that it has its scripts
+name: modelos
+about: language models installed on machines
+
+== 1. conversation
+client: which models are on m1?
+agent:  mistral is on m1
+client: is llama3 on m1?
+agent:  No: llama3 is not on m1
+client: get llama3 installed on m1
+agent:  Done: llama3 is installed on m1
+client: is llama3 on m1?
+agent:  Yes: llama3 is on m1
+
+== 2. facts
+installed(M, X) = {X} is installed on {M}      [set; program]
+
+== 3. rules
+model(X) = {X} is a model
+model(llama3). model(mistral). model(qwen2).
+here(M, X) = {X} is on {M} | which models are on {M}{X=?}
+here(M, X) :- installed(M, X), model(X).
+
+== 4. meta-interpreters
+-- execute
+act(installed(M, X), [install, M, X]).
+-- program
+observe installed(M, X)    via ollama           # LOOKS: M, X given = check, free = list
+act install                via ollama           # the script behind act(...) above
+rehearse m1: mistral qwen2                      # pretend machines to try them on
+rehearse m2: qwen2

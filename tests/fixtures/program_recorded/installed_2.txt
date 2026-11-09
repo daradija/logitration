@@ -1,0 +1,42 @@
+def _norm(name):
+    name = name.strip()
+    if name.endswith(":latest"):
+        name = name[:-len(":latest")]
+    return name
+
+
+def installed(world, M=None, X=None):
+    try:
+        names = list(world.machines())
+    except Exception:
+        return []
+    if M is not None:
+        names = [m for m in names if m == M]
+    wanted = _norm(X) if X is not None else None
+    result = []
+    seen = set()
+    for m in names:
+        try:
+            r = world.run(m, "ollama", "list")
+        except Exception:
+            continue
+        if r.rc != 0:
+            continue
+        for i, line in enumerate((r.out or "").splitlines()):
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split()
+            if not parts:
+                continue
+            if parts[0].upper() == "NAME" and i == 0:
+                continue
+            model = _norm(parts[0])
+            if wanted is not None and model != wanted:
+                continue
+            key = (m, model)
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append(key)
+    return result

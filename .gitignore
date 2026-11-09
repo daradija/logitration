@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.DS_Store
+# tests/out holds the curated results cited by README.md and the paper; scratch files written there stay out:
+tests/out/*.tmp
+tests/out/*.log.tmp
+tests/out/cluster_faltas.json
+tests/out/real_claude_cli.txt

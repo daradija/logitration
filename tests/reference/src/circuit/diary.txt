@@ -1,0 +1,30 @@
+== After 'assembly' (event 36)
+Which lamps are lit? My objects: ['l2']. The logic: ['l2'].
+Why is l1 unlit? l1 is unlit because no current reaches it: it would need down(i2), but event 8 left up(i2); it would need up(i1), but event 6 left down(i1).
+What holds up l2? l2 is lit; 9 events hold it up: event 3 (lamp(l2)), event 4 (ok(l2)), event 10 (up(i3)), event 12 (ok(cc1)), event 24 (has_current(source)), event 30 (connected(l2,c4)), event 31 (connected(c4,c3)), event 33 (connected(c3,c5)), event 36 (connected(c5,source)).
+
+== After 'I raise i1' (event 37)
+Which lamps are lit? My objects: ['l1', 'l2']. The logic: ['l1', 'l2'].
+Why did l1 change? l1 turned on because of event 37 (up(i1)).
+
+== After 'cc1 blows' (event 38)
+Which lamps are lit? My objects: none. The logic: none.
+Why did l1 change? l1 turned off because of event 38 (blown(cc1)).
+Why did l2 change? l2 turned off because of event 38 (blown(cc1)).
+
+== After 'I replace cc1' (event 39)
+Which lamps are lit? My objects: ['l1', 'l2']. The logic: ['l1', 'l2'].
+Why did l1 change? l1 turned on because of event 39 (ok(cc1)).
+Why did l2 change? l2 turned on because of event 39 (ok(cc1)).
+
+== After 'I lower i2' (event 40)
+Which lamps are lit? My objects: ['l2']. The logic: ['l2'].
+Why did l1 change? l1 turned off because of event 40 (down(i2)).
+
+== After 'I lower i1' (event 41)
+Which lamps are lit? My objects: ['l1', 'l2']. The logic: ['l1', 'l2'].
+Why did l1 change? l1 turned on because of event 41 (down(i1)).
+
+== After 'l2 blows' (event 42)
+Which lamps are lit? My objects: ['l1']. The logic: ['l1'].
+Why did l2 change? l2 turned off because of event 42 (blown(l2)).

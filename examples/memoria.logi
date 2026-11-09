@@ -1,0 +1,26 @@
+# memoria.logi: where can a job run? The free memory of each machine is read by a PROGRAM (vm_stat over ssh), not typed.
+#   logi spec memoria.logi                 who provides each fact, and the specification of the program
+#   logi check memoria.logi --program      the conversation, on the pretend machines of `rehearse` (--world ssh:HOST for real ones)
+name: memoria
+about: free memory of machines
+
+== 1. conversation
+client: where can j1 run?
+agent:  j1 is runnable on n2
+client: where can j2 run?
+agent:  j2 is runnable on n2
+
+== 2. facts
+need(J, MB)     = {J} needs {MB} MB of memory
+mem_free(N:name, MB:int>=0) = {N} has {MB} MB free      [program via vm_stat]
+need(j1, 48000). need(j2, 60000).
+
+== 3. rules
+runnable(J, N) = {J} is runnable on {N} | where can {J} run{N=?}
+runnable(J, N) :- need(J, Need), mem_free(N, Free), Free >= Need.
+
+== 4. meta-interpreters
+-- program
+rehearse n1 vm_stat: 16000
+rehearse n2 vm_stat: 64000
+rehearse n3 vm_stat: 32000

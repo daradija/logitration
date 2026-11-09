@@ -1,0 +1,2 @@
+brew_install nivel 1 intento 1: fallo -> ok
+brew_install nivel 2 intento 1: fallo -> ok

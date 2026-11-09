@@ -1,0 +1,51 @@
+# cluster_v1.logi: the FIRST cluster example (before the three layers): kept as a test fixture of the older layout
+# (== logic in one block, one == meta-interpreter, the client tells the state). examples/cluster.logi is the current one.
+# The client (an LLM, or another agent) asks "is j1 runnable on n3?", "why is j1 too big for n2?", "get j1 running on n3".
+name: cluster
+about: a small cluster that runs language-model jobs
+
+== 1. conversation
+client: n1 is a node. n1 has 16 GB of ram. n1 has 100 GB of disk
+client: n2 is a node. n2 has 64 GB of ram. n2 has 500 GB of disk
+client: n3 is a node. n3 has 256 GB of ram. n3 has 2000 GB of disk
+client: j1 is a job. j1 needs 120 GB of ram. j1 needs 300 GB of disk
+client: j2 is a job. j2 needs 8 GB of ram. j2 needs 20 GB of disk
+client: j3 is a job. j3 needs 1500 GB of disk
+agent:  How many GB of ram does j3 need to run?
+client: j3 needs 4 GB of ram
+agent:  This is what I understood:
+client: yes
+client: is j1 runnable on n3?
+agent:  Yes
+client: why is j1 too big for n2?
+agent:  n2 has only 64 GB of ram and j1 needs 120
+client: get j1 running on n2
+agent:  I cannot make it true by myself
+client: get j1 running on n3
+agent:  Done: j1 is running on n3 (command: launch j1 n3).
+
+== 2. logic
+node(N)         = {N} is a node
+job(J)          = {J} is a job
+ram(N, G)       = {N} has {G} GB of ram
+disk(N, G)      = {N} has {G} GB of disk
+need_ram(J, G)  = {J} needs {G} GB of ram
+need_disk(J, G) = {J} needs {G} GB of disk
+runs(J, N)      = {J} is running on {N}      [changes]
+runnable(J, N)  = {J} is runnable on {N}
+too_big(J, N)   = {J} is too big for {N}
+short_ram(J, N) = {N} lacks the ram of {J}
+short_disk(J, N)= {N} lacks the disk of {J}
+too_big(J, N) :- short_ram(J, N).
+too_big(J, N) :- short_disk(J, N).
+short_ram(J, N) :- need_ram(J, R), ram(N, M), M < R.
+short_disk(J, N) :- need_disk(J, D), disk(N, K), K < D.
+runnable(J, N) :- job(J), node(N), \+ too_big(J, N).
+
+== 3. meta-interpreter
+missing(need_ram(J, _)) :- job(J), \+ need_ram(J, _).
+ask(need_ram(J, _), ['How many GB of ram does', J, 'need to run?']).
+can_change(runs(J, N)) :- runnable(J, N).
+act(runs(J, N), [launch, J, N]).
+explain(short_ram(J, N), [N, 'has only', M, 'GB of ram and', J, 'needs', R]) :-
+    need_ram(J, R), ram(N, M), M < R.

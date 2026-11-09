@@ -1,0 +1,94 @@
+=== circuit: con bloque 3 8/8 turnos como se escribieron; SIN bloque 3 5/8
+  línea 8 cliente: mains is a source. l1 is a lamp. sw is a switch. f1 is a fuse
+    CON   : Before I load it I need to know: Is sw up or down?
+    SIN   : This is what I understood:
+            - mains is a source
+            - l1 is a lamp
+            - sw is a switch
+            - f1 is a fuse
+            Is that correct?
+  línea 9 cliente: f1 gets current from mains if f1 is ok. l1 gets current from f1 if sw is up
+    CON   : Before I load it I need to know: Is sw up or down?
+    SIN   : This is what I understood:
+            - mains is a source
+            - l1 is a lamp
+            - sw is a switch
+            - f1 is a fuse
+            - f1 gets current from mains if f1 is ok
+            - l1 gets current from f1 if sw is up
+            Is that correct?
+  línea 17 cliente: make l1 lit
+    CON   : Done: sw is up (command: relay sw up).
+            Now: l1 is lit.
+    SIN   : Done: sw is up.
+            Now: l1 is lit.
+  línea 21 cliente: make l1 lit
+    CON   : I cannot make it true by myself: l1 is lit. It would need:
+            1. f1 is not blown (I am not allowed to change: f1 is not blown)
+    SIN   : Done: f1 is ok.
+            Now: l1 is lit.
+=== shop: con bloque 3 8/8 turnos como se escribieron; SIN bloque 3 5/8
+  línea 16 cliente: get o2 ready to ship
+    CON   : I cannot make it true by myself: o2 is ready to ship. It would need:
+            1. cable is in stock and o2 is packed (I am not allowed to change: cable is in stock)
+    SIN   : Done: cable is in stock; o2 is packed.
+            Now: o2 is ready to ship.
+  línea 19 cliente: then cable is in stock
+    CON   : Added 1 event(s): step 1 (cable is in stock). Now: o1 is ready to ship.
+    SIN   : Added 1 event(s): step 3 (cable is in stock). Now: o1 is ready to ship; o2 is ready to ship.
+  línea 20 cliente: get o2 ready to ship
+    CON   : Done: o2 is packed (command: robot pack o2).
+            Now: o2 is ready to ship.
+    SIN   : Already true: o2 is ready to ship.
+  línea 23 cliente: why is o2 ready to ship?
+    CON   : o2 is ready to ship, because:
+              ├─ o2 is an order of cable
+              ├─ cable is in stock
+              ├─ o2 is paid (confirmed by the bank)
+              └─ o2 is packed
+            It rests on: cable is in stock (since step 1); o2 is packed (since step 2).
+    SIN   : o2 is ready to ship, because:
+              ├─ o2 is an order of cable
+              ├─ cable is in stock
+              ├─ o2 is paid
+              └─ o2 is packed
+            It rests on: cable is in stock (since step 3); o2 is paid (since the start); o2 is packed (since step 2).
+=== cluster: con bloque 3 12/12 turnos como se escribieron; SIN bloque 3 8/12
+  línea 13 cliente: j3 is a job. j3 needs 1500 GB of disk
+    CON   : Before I load it I need to know: How many GB of ram does j3 need to run?
+    SIN   : This is what I understood:
+            - n1 is a node
+            - n1 has 16 GB of ram
+            - n1 has 100 GB of disk
+            - n2 is a node
+            - n2 has 64 GB of ram
+            - n2 has 500 GB of disk
+            - n3 is a node
+            - n3 has 256 GB of ram
+            - n3 has 2000 GB of disk
+            - j1 is a job
+            - j1 needs 120 GB of ram
+            - j1 needs 300 GB of disk
+            - j2 is a job
+            - j2 needs 8 GB of ram
+            - j2 needs 20 GB of disk
+            - j3 is a job
+            - j3 needs 1500 GB of disk
+            Is that correct?
+  línea 20 cliente: why is j1 too big for n2?
+    CON   : j1 is too big for n2, because:
+              └─ n2 has only 64 GB of ram and j1 needs 120
+    SIN   : j1 is too big for n2, because:
+              └─ n2 lacks the ram of j1
+                 ├─ j1 needs 120 GB of ram
+                 └─ n2 has 64 GB of ram
+  línea 22 cliente: get j1 running on n2
+    CON   : I cannot make it true by myself: j1 is running on n2. It would need:
+            1. j1 is running on n2 (I am not allowed to change: j1 is running on n2)
+    SIN   : Done: j1 is running on n2.
+            Now: j1 is running on n2.
+  línea 24 cliente: get j1 running on n3
+    CON   : Done: j1 is running on n3 (command: launch j1 n3).
+            Now: j1 is running on n3.
+    SIN   : Done: j1 is running on n3.
+            Now: j1 is running on n3.

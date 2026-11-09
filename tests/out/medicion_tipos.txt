@@ -1,0 +1,29 @@
+# medicion_tipos: facts mal formados del estudio de Clorm (logitration/clorm/out/05_mal_formados.txt) frente a Knowledge.fact()
+# bien formado (control): capacity(n2, ram, 64)
+== without types, without values: rechaza 5/8; el control se acepta
+   arity     capacity(n2, ram)                    RECHAZA unknown_fact: 'capacity(n2, ram)' is not something you can state here (allowed: node(N), job(J), capacity(N, R, G), demand(J, R, G), runs(J, N))
+   text      capacity(n2, ram, "sixty four")      RECHAZA invalid_fact: fact: unexpected text at ' "sixty four'
+   resource  capacity(n2, gpu, 80)                ACEPTA (entra al motor)
+   negative  capacity(n2, ram, -5)                ACEPTA (entra al motor)
+   variable  capacity(N2, ram, 64)                RECHAZA invalid_fact: fact: variable N2 not allowed here
+   decimal   capacity(n2, ram, 64.5)              RECHAZA invalid_fact: fact: unexpected text at '.5)'
+   typo      capasity(n2, ram, 64)                RECHAZA unknown_fact: 'capasity(n2, ram, 64)' is not something you can state here (allowed: node(N), job(J), capacity(N, R, G), demand(J, R, G), runs(J, N))
+   order     capacity(ram, n2, 64)                ACEPTA (entra al motor)
+== with `[R: ram disk]` (what the library already had): rechaza 7/8; el control se acepta
+   arity     capacity(n2, ram)                    RECHAZA unknown_fact: 'capacity(n2, ram)' is not something you can state here (allowed: node(N), job(J), capacity(N, R, G), demand(J, R, G), runs(J, N))
+   text      capacity(n2, ram, "sixty four")      RECHAZA invalid_fact: fact: unexpected text at ' "sixty four'
+   resource  capacity(n2, gpu, 80)                RECHAZA invalid_value: 'capacity(n2, gpu, 80)': R must be one of ram, disk
+   negative  capacity(n2, ram, -5)                ACEPTA (entra al motor)
+   variable  capacity(N2, ram, 64)                RECHAZA invalid_fact: fact: variable N2 not allowed here
+   decimal   capacity(n2, ram, 64.5)              RECHAZA invalid_fact: fact: unexpected text at '.5)'
+   typo      capasity(n2, ram, 64)                RECHAZA unknown_fact: 'capasity(n2, ram, 64)' is not something you can state here (allowed: node(N), job(J), capacity(N, R, G), demand(J, R, G), runs(J, N))
+   order     capacity(ram, n2, 64)                RECHAZA invalid_value: 'capacity(ram, n2, 64)': R must be one of ram, disk
+== with types: rechaza 8/8; el control se acepta
+   arity     capacity(n2, ram)                    RECHAZA unknown_fact: 'capacity(n2, ram)' is not something you can state here (allowed: node(N), job(J), capacity(N, R, G), demand(J, R, G), runs(J, N))
+   text      capacity(n2, ram, "sixty four")      RECHAZA invalid_type: 'capacity(n2, ram, "sixty four")': G must be a whole number, 0 or more ('"sixty four"' is not); the phrase is «{N} has {G} GB of {R}»
+   resource  capacity(n2, gpu, 80)                RECHAZA invalid_type: 'capacity(n2, gpu, 80)': R must be one of ram, disk ('gpu' is not one of them); the phrase is «{N} has {G} GB of {R}»
+   negative  capacity(n2, ram, -5)                RECHAZA invalid_type: 'capacity(n2, ram, -5)': G must be a whole number, 0 or more (-5 is out of range); the phrase is «{N} has {G} GB of {R}»
+   variable  capacity(N2, ram, 64)                RECHAZA invalid_type: 'capacity(N2, ram, 64)': N must be a name (lowercase letters, digits and _) ('N2' is not); the phrase is «{N} has {G} GB of {R}»
+   decimal   capacity(n2, ram, 64.5)              RECHAZA invalid_type: 'capacity(n2, ram, 64.5)': G must be a whole number, 0 or more ('64.5' is not); the phrase is «{N} has {G} GB of {R}»
+   typo      capasity(n2, ram, 64)                RECHAZA unknown_fact: 'capasity(n2, ram, 64)' is not something you can state here (allowed: node(N), job(J), capacity(N, R, G), demand(J, R, G), runs(J, N))
+   order     capacity(ram, n2, 64)                RECHAZA invalid_type: 'capacity(ram, n2, 64)': R must be one of ram, disk ('n2' is not one of them); the phrase is «{N} has {G} GB of {R}»

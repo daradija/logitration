@@ -1,0 +1,42 @@
+# shop.logi: a warehouse agent that a shopping-assistant LLM queries over A2A.
+#   logi serve shop.logi --translator claude-cli      the LLM then asks: "can o2 ship?", "get o2 ready to ship"
+#   logi talk http://127.0.0.1:8923/ "why can't o2 ship yet?"
+name: shop
+about: orders in a small warehouse
+
+== 1. conversation
+# The client here is the LLM: it tells the agent what it knows and asks it to check or to act.
+client: o1 is an order of lamp. o2 is an order of cable. lamp is in stock
+client: o1 is paid. o2 is paid. o1 is packed
+agent:  This is what I understood:
+client: yes
+agent:  Now: o1 is ready to ship.
+client: why is o2 not ready to ship?
+agent:  It would need: cable is in stock and o2 is packed
+client: get o2 ready to ship
+agent:  I cannot make it true by myself: o2 is ready to ship.
+        (I am not allowed to change: cable is in stock)
+client: then cable is in stock
+client: get o2 ready to ship
+agent:  Done: o2 is packed (command: robot pack o2).
+        Now: o2 is ready to ship.
+client: why is o2 ready to ship?
+agent:  o2 is paid (confirmed by the bank)
+
+== 2. facts
+# What the client tells the agent (the LLM says what it knows), and the words for it.
+order(O, I) = {O} is an order of {I}
+in_stock(I) = {I} is in stock      [changes; not: {I} is sold out]
+paid(O)     = {O} is paid          [changes]
+packed(O)   = {O} is packed        [changes]
+
+== 3. rules
+ready(O)    = {O} is ready to ship
+ready(O) :- order(O, I), in_stock(I), paid(O), packed(O).
+
+== 4. meta-interpreters
+-- check
+explain(paid(O), [O, 'is paid (confirmed by the bank)']).
+-- execute
+can_change(packed(_)).                 % the packing robot is the agent's; stock and payments are not
+act(packed(O), [robot, pack, O]).

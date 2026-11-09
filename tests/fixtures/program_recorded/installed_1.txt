@@ -1,0 +1,36 @@
+def installed(world, M=None, X=None):
+    try:
+        names = list(world.machines())
+    except Exception:
+        return []
+    if M is not None:
+        names = [m for m in names if m == M]
+    result = []
+    seen = set()
+    for m in names:
+        try:
+            r = world.run(m, "ollama", "list")
+        except RuntimeError:
+            continue
+        except Exception:
+            continue
+        if r.rc != 0:
+            continue
+        for i, line in enumerate((r.out or "").splitlines()):
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split()
+            if not parts:
+                continue
+            if parts[0].upper() == "NAME" and i == 0:
+                continue
+            model = parts[0]
+            if X is not None and model != X:
+                continue
+            key = (m, model)
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append(key)
+    return result

@@ -1,0 +1,37 @@
+{
+ "name": "installed",
+ "kind": "observe",
+ "level": 1,
+ "accepted": true,
+ "calls": 2,
+ "usd": 0.0202,
+ "attempts": [
+  {
+   "k": 1,
+   "validation": null,
+   "rehearsal": "4/10 cases",
+   "accepted": false,
+   "meta": {
+    "model": "claude-sonnet-5-5",
+    "usd": 0.008774,
+    "tokens_in": 992,
+    "tokens_out": 481,
+    "ms": 7046
+   }
+  },
+  {
+   "k": 2,
+   "validation": null,
+   "rehearsal": "10/10 cases",
+   "accepted": true,
+   "meta": {
+    "model": "claude-sonnet-5-5",
+    "usd": 0.011449999999999998,
+    "tokens_in": 1596,
+    "tokens_out": 507,
+    "ms": 7942
+   }
+  }
+ ],
+ "informe": ""
+}

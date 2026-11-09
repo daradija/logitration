@@ -1,0 +1,107 @@
+round 1 level 0 installed     x  calls so far 1
+round 1 level 0 install       x  calls so far 2
+round 1 level 0 uninstall     x  calls so far 3
+round 1 level 0 formulas      x  calls so far 4
+round 1 level 0 brew_install  x  calls so far 5
+round 1 level 0 setting       x  calls so far 6
+round 1 level 0 listening     x  calls so far 7
+round 1 level 0 running       x  calls so far 8
+round 1 level 0 start         x  calls so far 9
+round 1 level 1 installed     x  calls so far 10
+round 1 level 1 install       OK calls so far 11
+round 1 level 1 uninstall     x  calls so far 12
+round 1 level 1 formulas      OK calls so far 13
+round 1 level 1 brew_install  x  calls so far 14
+round 1 level 1 setting       x  calls so far 15
+round 1 level 1 listening     OK calls so far 16
+round 1 level 1 running       x  calls so far 17
+round 1 level 1 start         OK calls so far 18
+round 1 level 2 installed     OK calls so far 19
+round 1 level 2 install       OK calls so far 20
+round 1 level 2 uninstall     x  calls so far 21
+round 1 level 2 formulas      OK calls so far 22
+round 1 level 2 brew_install  x  calls so far 23
+round 1 level 2 setting       OK calls so far 24
+round 1 level 2 listening     OK calls so far 25
+round 1 level 2 running       OK calls so far 26
+round 1 level 2 start         OK calls so far 27
+round 2 level 0 installed     x  calls so far 28
+round 2 level 0 install       x  calls so far 29
+round 2 level 0 uninstall     x  calls so far 30
+round 2 level 0 formulas      x  calls so far 31
+round 2 level 0 brew_install  x  calls so far 32
+round 2 level 0 setting       x  calls so far 33
+round 2 level 0 listening     x  calls so far 34
+round 2 level 0 running       x  calls so far 35
+round 2 level 0 start         x  calls so far 36
+round 2 level 1 installed     OK calls so far 37
+round 2 level 1 uninstall     OK calls so far 38
+round 2 level 1 brew_install  OK calls so far 39
+round 2 level 1 setting       OK calls so far 40
+round 2 level 1 running       OK calls so far 41
+round 2 level 2 uninstall     OK calls so far 42
+round 2 level 2 brew_install  OK calls so far 43
+round 3 level 0 installed     x  calls so far 44
+round 3 level 0 install       x  calls so far 45
+round 3 level 0 uninstall     x  calls so far 46
+round 3 level 0 formulas      x  calls so far 47
+round 3 level 0 brew_install  x  calls so far 48
+round 3 level 0 setting       x  calls so far 49
+round 3 level 0 listening     x  calls so far 50
+round 3 level 0 running       x  calls so far 51
+round 3 level 0 start         x  calls so far 52
+ESTUDIO: scripts que escribe el metaintérprete `program` (logitration/libreria, tests/study_programs.py)
+CITA: modelo claude CLI alias sonnet (claude-sonnet-5-5), n = 9 tareas por nivel (1 muestra por celda, temperatura por defecto), 52 llamadas, 2026-11-07 15:29:54 a 2026-11-07 15:37:54, hasta 3 intentos por celda; mundo SIMULADO = MAQUETA (máquinas de mentira en memoria: ollama, brew, cat, ss, systemctl con formatos de los reales); aceptación = validador AST + casos con oráculo del mundo de ensayo.
+
+nivel de contexto                                                    1.er intento        tras reintentos  llamadas     USD
+0 name                                                     0/9 =   0% [ 0- 30] 0/9 =   0% [ 0- 30]        27   0.419
+1 name + signature                                         4/9 =  44% [19- 73] 9/9 = 100% [70-100]        14   0.178
+2 name + signature + your words + conversation examples    7/9 =  78% [45- 94] 9/9 = 100% [70-100]        11   0.133
+
+IC 95 % de Wilson sobre las 9 tareas (no sobre muestras de una tarea). Con n = 9 una tarea son 11 puntos.
+
+tarea          tipo      nivel 0: intentos/resultado  nivel 1: intentos/resultado  nivel 2: intentos/resultado
+installed      observe   3 / NO                    2 / ok                    1 / ok (1.º)            
+install        act       3 / NO                    1 / ok (1.º)              1 / ok (1.º)            
+uninstall      act       3 / NO                    2 / ok                    2 / ok                  
+formulas       observe   3 / NO                    1 / ok (1.º)              1 / ok (1.º)            
+brew_install   act       3 / NO                    2 / ok                    2 / ok                  
+setting        observe   3 / NO                    2 / ok                    1 / ok (1.º)            
+listening      observe   3 / NO                    1 / ok (1.º)              1 / ok (1.º)            
+running        observe   3 / NO                    2 / ok                    1 / ok (1.º)            
+start          act       3 / NO                    1 / ok (1.º)              1 / ok (1.º)            
+
+POR TIPO (1.er intento / tras reintentos)
+  observe  nivel 0: 0/5  /  0/5
+  observe  nivel 1: 2/5  /  5/5
+  observe  nivel 2: 5/5  /  5/5
+  act      nivel 0: 0/4  /  0/4
+  act      nivel 1: 2/4  /  4/4
+  act      nivel 2: 2/4  /  4/4
+
+QUÉ FALLÓ (error del primer intento fallido de cada celda; el motivo que volvió al modelo)
+  nivel 0 installed     line 7: `With` is not allowed in a program
+  nivel 0 install       line 44: `With` is not allowed in a program
+  nivel 0 uninstall     line 11: `With` is not allowed in a program
+  nivel 0 formulas      line 6: `With` is not allowed in a program
+  nivel 0 brew_install  line 26: `input` is not allowed (no eval/exec/open/getattr, no dunder names)
+  nivel 0 setting       line 7: `With` is not allowed in a program
+  nivel 0 listening     line 6: `With` is not allowed in a program
+  nivel 0 running       line 6: `With` is not allowed in a program
+  nivel 0 start         line 20: `With` is not allowed in a program
+  nivel 1 installed     ensayo: 3/10 cases |   FAIL installed(M=None, X=None)  everything the world says |        expected [('m1', 'mistral'), ('m1', 'qwen2'), ('m2', 'phi3')], got [('m1', 'mistral:latest'), ('m1', 'qwen2:latest'), ('m2', 'phi3:latest')]
+  nivel 1 uninstall     ensayo: 1/2 cases |   FAIL uninstall(M='m1', X='llama3')  cannot be done: must RAISE, not pretend |        it returned 'llama3 was not installed on m1; nothing to do' instead of raising: the command failed (the world said so) and 
+  nivel 1 brew_install  ensayo: 1/5 cases |   FAIL brew_install(M='m1', P='tree')  must do it, twice, without raising |        it returned 'tree already installed on m1' but the world does not show it: brew_install(M='m1', P='tree') is still not true |  
+  nivel 1 setting       ensayo: 1/11 cases |   FAIL setting(M=None, K=None, V=None)  everything the world says |        expected [('m1', 'log_level', 'info'), ('m1', 'mode', 'fast'), ('m1', 'port', '8080'), ('m1', 'workers', '4'), ('m2', 'port', '9090')]
+  nivel 1 running       ensayo: 7/10 cases |   FAIL running(M=None, S=None)  everything the world says |        expected [('m1', 'cron'), ('m1', 'nginx'), ('m2', 'cron')], got [('m1', 'cron.service'), ('m1', 'nginx.service'), ('m2', 'cron.service')] |   
+  nivel 2 uninstall     ensayo: 1/2 cases |   FAIL uninstall(M='m1', X='llama3')  cannot be done: must RAISE, not pretend |        it returned 'Done: llama3 is removed from m1 (it was not installed)' instead of raising: the command failed (the world said
+  nivel 2 brew_install  ensayo: 1/5 cases |   FAIL brew_install(M='m1', P='tree')  must do it, twice, without raising |        it returned 'tree is already a brew package on m1' but the world does not show it: brew_install(M='m1', P='tree') is still not 
+
+Intentos fallidos: 27 por el validador (forma), 7 por el ensayo (comportamiento).
+
+INCERTIDUMBRE Y LÍMITES (declarados):
+  - 1 muestra por celda: el mismo prompt da respuestas distintas (instalador_meta midió ~8 puntos de ruido entre dos ejecuciones idénticas con n = 21 x 3); con n = 9, diferencias de <= 2 tareas no son señal.
+  - Las tareas, el validador, el oráculo y los casos los escribió el mismo autor; los casos pueden ser más severos o más laxos que lo que necesita un usuario (p. ej. «debe lanzar si el comando falla»).
+  - Mundo de mentira: los formatos copian a los reales (ollama list con :latest, ss con IPv6), el comportamiento está simplificado; nada de esto se ha probado en máquinas reales.
+  - Un solo modelo (sonnet) y una sola fecha. Los reintentos solo llevan el error del ensayo (no el código del oráculo). Lo que el ensayo no cubre (permisos, red lenta, formatos de otra versión) no está medido.
+  - Llamadas por nivel desiguales: los reintentos se repartieron por rondas y, si se agotaba el tope (58), las celdas sin reintentar se anotan como tales.

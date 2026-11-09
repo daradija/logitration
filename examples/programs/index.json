@@ -1,0 +1,14 @@
+{
+ "installed": {
+  "kind": "observe",
+  "version": 1
+ },
+ "install": {
+  "kind": "act",
+  "version": 1
+ },
+ "mem_free": {
+  "kind": "observe",
+  "version": 1
+ }
+}

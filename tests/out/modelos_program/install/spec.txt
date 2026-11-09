@@ -1,0 +1,40 @@
+PROGRAM install  (act)   modelos.logi:32
+  speaks as : {X} is installed on {M}
+  fact      : installed(M, X)   commands allowed via: ollama
+  names the user uses (conversation and pretend world): M: m1, m2; X: llama3, mistral, qwen2
+  context level 2 (name + signature + your words + conversation examples); 4 conversation turns as examples
+  cases it will be tried on (5):
+     - install(M='m1', X='llama3')  must do it, twice, without raising
+     - install(M='m1', X='mistral')  must do it, twice, without raising
+     - install(M='m2', X='llama3')  must do it, twice, without raising
+     - install(M='m2', X='mistral')  must do it, twice, without raising
+     - install(M='m1', X='nosuchmodel-xyz')  cannot be done: must RAISE, not pretend
+
+  --- the prompt, as it goes to the model ---
+  | Write the Python script `install`: a script that CHANGES the world.
+  | 
+  | SIGNATURE (write exactly this function):
+  | def install(world, M, X):
+  |     """Make true: "{X} is installed on {M}". Arguments are str. Return a short text saying what was done. Raise RuntimeError(message) when it could not be done (never hide a failed command). Safe to run twice."""
+  | 
+  | The only door to the world:
+  |   world.run(machine, command, *args)   runs ONE command on ONE machine, without a shell: world.run("m1", "ollama", ...).
+  |     It returns an object with .rc (int, the exit code), .out (str, stdout) and .err (str, stderr). It raises RuntimeError if the machine is unknown.
+  |     Commands you may use: ollama. Nothing else is reachable (no files, no network, no subprocess).
+  | world.machines()                       returns the list of machine names (str).
+  | Imports allowed: re, json. Define the function install; helpers are allowed.
+  | 
+  | What the user wrote about it (modelos.logi, line 32):
+  |   the agent says and understands:  «{X} is installed on {M}»
+  |   names the user uses (conversation and pretend world):  M: m1, m2   X: llama3, mistral, qwen2   (written exactly like this)
+  | The user's conversation with the agent (client asks; the agent must answer with the lines after `agent:`):
+  |   client: which models are on m1?
+  |   agent:  mistral is on m1
+  |   client: is llama3 on m1?
+  |   agent:  No: llama3 is not on m1
+  |   client: get llama3 installed on m1
+  |   agent:  Done: llama3 is installed on m1
+  |   client: is llama3 on m1?
+  |   agent:  Yes: llama3 is on m1
+  | 
+  | Answer with the code only.

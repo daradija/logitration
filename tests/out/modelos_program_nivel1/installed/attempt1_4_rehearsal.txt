@@ -1,0 +1,27 @@
+4/10 cases
+  FAIL installed(M=None, X=None)  everything the world says
+       expected [('m1', 'mistral'), ('m1', 'qwen2'), ('m2', 'qwen2')], got [('m1', 'mistral:latest'), ('m1', 'qwen2:latest'), ('m2', 'qwen2:latest')]
+  FAIL installed(M='m1', X=None)  as a question
+       expected [('m1', 'mistral'), ('m1', 'qwen2')], got [('m1', 'mistral:latest'), ('m1', 'qwen2:latest')]
+  FAIL installed(M='m2', X=None)  as a question
+       expected [('m2', 'qwen2')], got [('m2', 'qwen2:latest')]
+FAIL installed(M=None, X=None)  everything the world says
+       expected [('m1', 'mistral'), ('m1', 'qwen2'), ('m2', 'qwen2')], got [('m1', 'mistral:latest'), ('m1', 'qwen2:latest'), ('m2', 'qwen2:latest')]
+FAIL installed(M='m1', X=None)  as a question
+       expected [('m1', 'mistral'), ('m1', 'qwen2')], got [('m1', 'mistral:latest'), ('m1', 'qwen2:latest')]
+FAIL installed(M='m2', X=None)  as a question
+       expected [('m2', 'qwen2')], got [('m2', 'qwen2:latest')]
+ok   installed(M=None, X='llama3')  as a question
+       ok
+FAIL installed(M=None, X='mistral')  as a question
+       expected [('m1', 'mistral')], got []
+FAIL installed(M=None, X='qwen2')  as a question
+       expected [('m1', 'qwen2'), ('m2', 'qwen2')], got []
+ok   installed(M='m1', X='llama3')  as a question
+       ok
+FAIL installed(M='m1', X='mistral')  as a question
+       expected [('m1', 'mistral')], got []
+ok   installed(M='m2', X='llama3')  as a question
+       ok
+ok   installed(M='m2', X='mistral')  as a question
+       ok

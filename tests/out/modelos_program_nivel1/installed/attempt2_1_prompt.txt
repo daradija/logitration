@@ -1,0 +1,60 @@
+Write the Python script `installed`: a script that LOOKS at the world (read-only) and reports facts.
+
+SIGNATURE (write exactly this function):
+def installed(world, M=None, X=None):
+    """Return the list of ALL tuples (M, X) of str that are true now and agree with the arguments that are not None (None means "any": it is a variable). Read-only: change nothing. Return [] when nothing matches."""
+
+The only door to the world:
+  world.run(machine, command, *args)   runs ONE command on ONE machine, without a shell: world.run("m1", "ollama", ...).
+    It returns an object with .rc (int, the exit code), .out (str, stdout) and .err (str, stderr). It raises RuntimeError if the machine is unknown.
+    Commands you may use: ollama. Nothing else is reachable (no files, no network, no subprocess).
+world.machines()                       returns the list of machine names (str).
+Imports allowed: re, json. Define the function installed; helpers are allowed.
+
+A previous attempt of yours:
+def installed(world, M=None, X=None):
+    try:
+        names = list(world.machines())
+    except Exception:
+        return []
+    if M is not None:
+        names = [m for m in names if m == M]
+    result = []
+    seen = set()
+    for m in names:
+        try:
+            r = world.run(m, "ollama", "list")
+        except RuntimeError:
+            continue
+        except Exception:
+            continue
+        if r.rc != 0:
+            continue
+        for i, line in enumerate((r.out or "").splitlines()):
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split()
+            if not parts:
+                continue
+            if parts[0].upper() == "NAME" and i == 0:
+                continue
+            model = parts[0]
+            if X is not None and model != X:
+                continue
+            key = (m, model)
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append(key)
+    return result
+It was rejected: it ran but the rehearsal failed: 4/10 cases
+  FAIL installed(M=None, X=None)  everything the world says
+       expected [('m1', 'mistral'), ('m1', 'qwen2'), ('m2', 'qwen2')], got [('m1', 'mistral:latest'), ('m1', 'qwen2:latest'), ('m2', 'qwen2:latest')]
+  FAIL installed(M='m1', X=None)  as a question
+       expected [('m1', 'mistral'), ('m1', 'qwen2')], got [('m1', 'mistral:latest'), ('m1', 'qwen2:latest')]
+  FAIL installed(M='m2', X=None)  as a question
+       expected [('m2', 'qwen2')], got [('m2', 'qwen2:latest')]
+Write the corrected, complete script.
+
+Answer with the code only.

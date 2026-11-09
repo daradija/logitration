@@ -1,0 +1,148 @@
+== 1. engine: aggregate_all (max/min/count/sum/bag/set)
+  [ok  ] max(E, Witness): the node with the most ram
+  [ok  ] min(E, Witness): the node with the least ram
+  [ok  ] max(E): the biggest disk
+  [ok  ] min(E): the smallest ram
+  [ok  ] sum(E)
+  [ok  ] count
+  [ok  ] count of nothing is 0
+  [ok  ] max of nothing fails (there is no biggest)
+  [ok  ] set(T): sorted, no repeats
+  [ok  ] bag(T): in order
+  [ok  ] an unknown aggregate spec is an error
+  [ok  ] inside a rule, with a bound resource
+== 2. the file: facts / rules / meta-interpreters (-- check, -- execute, -- complete)
+  [ok  ] cluster.logi has the three layers and no old `== logic`
+  [ok  ] each meta-interpreter says what the file wrote for it
+  [ok  ] `observe:` is read, with its line
+  [ok  ] every meta line knows its subsection
+  [ok  ] the older layout (== logic, one == meta-interpreter) still loads
+  [ok  ] older layout circuit_v1: its conversation answers as written (8 turns)
+  [ok  ] older layout cluster_v1: its conversation answers as written (12 turns)
+  [ok  ] circuit in the new layout and in the old one: the same words in every reply
+  [ok  ] bad file says where: idea.logi:4: '-- check' only goes inside the meta-interpreters section
+  [ok  ] bad file says where: idea.logi:2: unknown meta-interpreter '-- guess' (use: check, execute, complete, program)
+  [ok  ] bad file says where: idea.logi:4: two 'observe:' lines (line 3 already has one)
+  [ok  ] lint: a meta line under the subsection of another meta-interpreter is a warning
+  [ok  ] lint: cluster.logi has no errors or warnings
+  [ok  ] lint says that observe runs only with --observe
+== 3. observe: the agent looks at the cluster; the client only asks
+  [ok  ] no description from the client: it looked, and answered
+  [ok  ] variable in a parameter: the answer is the list of nodes (data)
+  [ok  ] a job that fits several nodes: all of them
+  [ok  ] max over the facts: most ram
+  [ok  ] max over the facts: most disk
+  [ok  ] yes/no still works
+  [ok  ] a concrete instance: execute sends the command
+  [ok  ] without observe=True the file's observe: does not run (the agent knows nothing)
+  [ok  ] ...and it says it is declared but off
+note: cluster.logi:43 observes the world with `python3 observe_cluster.py`; it did not run (add --observe to let it)
+FAIL line 9  client: what can I ask?
+       ✓ You can ask me, for example
+       ✗ where can j1 run?
+       the agent said:
+         | You can tell me, in your own words: <N> is a node; <J> is a job; <N> has <G> GB of <R>; <J> needs <G> GB of <R>; <J> is running on <N>. Things that happen afterwards go in order ("then ..."). Then ask me whether something is true, which ones, why, why not, or how it changed, about: <J> is runnable on <N>; <J> is too big for <N>; <N> lacks the <R> of <J>; <N> has the most <R>. You can ask me, for example: “where can <J> run?”; “is <J> too big for <N>?”; “what lacks the <R> of <J>?”; “what has the most <R>?”; “get <J> running on <N>”. Add “why” in front of a question and I give the reason.
+FAIL line 12  client: where can j1 run?
+       ✗ j1 is runnable on n3
+       the agent said:
+         | Tell me your situation first. You can tell me things like: <N> is a node; <J> is a job; <N> has <G> GB of <R>; <J> needs <G> GB of <R>.
+FAIL line 14  client: which node has the most ram?
+       ✗ n3 has the most ram
+       the agent said:
+         | Tell me your situation first. You can tell me things like: <N> is a node; <J> is a job; <N> has <G> GB of <R>; <J> needs <G> GB of <R>.
+FAIL line 16  client: which node has the most disk?
+       ✗ n3 has the most disk
+       the agent said:
+         | Tell me your situation first. You can tell me things like: <N> is a node; <J> is a job; <N> has <G> GB of <R>; <J> needs <G> GB of <R>.
+FAIL line 18  client: where can j3 run?
+       ✗ To answer that I need to know: How many GB of ram does j3 need to run?
+       the agent said:
+         | Tell me your situation first. You can tell me things like: <N> is a node; <J> is a job; <N> has <G> GB of <R>; <J> needs <G> GB of <R>.
+ok   line 20  client: j3 needs 4 GB of ram
+       ✓ This is what I understood:
+       ✓ j3 needs 4 GB of ram
+FAIL line 23  client: yes
+       ✗ j3 is runnable on n3
+       the agent said:
+         | Loaded: 1 facts and 0 event(s). Now: nothing is runnable on nothing.
+FAIL line 25  client: why is j1 too big for n2?
+       ✗ n2 has only 64 GB of ram and j1 needs 120
+       the agent said:
+         | I do not know j1, n2: they are not in what you have told me (I know: j3).
+FAIL line 27  client: get j1 running on n2
+       ✗ I cannot make it true by myself
+       the agent said:
+         | I do not know j1, n2: they are not in what you have told me (I know: j3).
+FAIL line 29  client: get j1 running on n3
+       ✗ Done: j1 is running on n3 (command: launch j1 n3)
+       the agent said:
+         | I do not know j1, n3: they are not in what you have told me (I know: j3).
+ok   line 31  client: put j1 on the best node
+       ✓ I did not understand that
+       ✓ You can ask me, for example
+2/11 turns answered as written
+  [ok  ] logi check without --observe fails (nothing was observed)
+ok   line 9  client: what can I ask?
+       ✓ You can ask me, for example
+       ✓ where can j1 run?
+ok   line 12  client: where can j1 run?
+       ✓ j1 is runnable on n3
+ok   line 14  client: which node has the most ram?
+       ✓ n3 has the most ram
+ok   line 16  client: which node has the most disk?
+       ✓ n3 has the most disk
+ok   line 18  client: where can j3 run?
+       ✓ To answer that I need to know: How many GB of ram does j3 need to run?
+ok   line 20  client: j3 needs 4 GB of ram
+       ✓ This is what I understood:
+       ✓ j3 needs 4 GB of ram
+ok   line 23  client: yes
+       ✓ j3 is runnable on n3
+ok   line 25  client: why is j1 too big for n2?
+       ✓ n2 has only 64 GB of ram and j1 needs 120
+ok   line 27  client: get j1 running on n2
+       ✓ I cannot make it true by myself
+ok   line 29  client: get j1 running on n3
+       ✓ Done: j1 is running on n3 (command: launch j1 n3)
+ok   line 31  client: put j1 on the best node
+       ✓ I did not understand that
+       ✓ You can ask me, for example
+11/11 turns answered as written
+  [ok  ] logi check --observe: the conversation of the file passes
+  [ok  ] complete: the question is about j3 and j3 lacks its ram, so it asks
+  [ok  ] a gap about another job does not stop this question
+  [ok  ] a question that names no job is not stopped by j3's gap
+  [ok  ] the confirmation lists what the client said, not what the agent saw
+  [ok  ] after the yes, the question that was waiting is answered
+  [ok  ] the cluster changed between questions: the second answer follows it
+  [ok  ] (observed facts are replaced, not piled up)
+  [ok  ] lines that are not facts of the phrases are ignored (and counted); a value outside [R: ram disk] is not a fact
+  [ok  ] Prolog form and sentence form are both read
+  [ok  ] the observation fails: it says so, it does not answer from nothing
+  [ok  ] a command that does not exist is a clean failure
+  [ok  ] what the client told stays in the world after a new look
+  [ok  ] observe_cluster.py --local adds this machine as node `here`
+  [ok  ] ...with a real amount of ram
+== 4. teaching how to ask
+  [ok  ] “what can I ask?”: examples made from the phrases, with names it sees
+  [ok  ] ...and the actions it may do (only where the rules allow: n3, not n1)
+  [ok  ] every example it offers is understood (and answered) by the agent
+  [ok  ] something it does not understand is not a dry refusal: it teaches how to ask
+  [ok  ] ...and still says it does not run instructions or code
+  [ok  ] help of an agent that looks at the world: ask, do not tell
+  [ok  ] an agent that is told things: tell and ask are both taught
+  [ok  ] circuit: not understood -> examples too
+  [ok  ] traffic_light: one question, one example
+== 5. variable in a parameter / max-min in a small file of its own
+  [ok  ] a variable in the second argument, from a template of {S=?}
+  [ok  ] aggregate_all(max(N, X), ...) in the rules of a new file
+== 6. named meta-interpreters, :reglas, explain on a goal with variables
+  [ok  ] a conversation has its three meta-interpreters by name: check, execute, complete
+  [ok  ] ...and each one has its own functions
+  [ok  ] :reglas shows facts, rules and the meta-interpreters with their subsections
+  [ok  ] the banner of try names the three meta-interpreters and the observation
+  [ok  ] explain/2 is used even when the goal still has a variable (short(j1, n2, _))
+  [ok  ] an observation of more than 400 facts is refused
+  [ok  ] the first template is how the agent speaks: it cannot hold {N=?}
+
+checks: 69   failures: 0

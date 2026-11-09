@@ -1,0 +1,7 @@
+installed (observe) via ollama: context level 2 (name + signature + your words + conversation examples)
+  attempt 1: validator ok; rehearsal 10/10 cases -> ACCEPTED
+  anchored programs/installed.py v1 (1 call(s), about $0.011)
+install (act) via ollama: context level 2 (name + signature + your words + conversation examples)
+  attempt 1: validator ok; rehearsal 5/5 cases -> ACCEPTED
+  anchored programs/install.py v1 (1 call(s), about $0.011)
+calls: 2; traces in tests/out/modelos_program

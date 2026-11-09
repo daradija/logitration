@@ -1,0 +1,1 @@
+ok: the script passes the validator

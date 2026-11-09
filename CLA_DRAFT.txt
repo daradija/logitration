@@ -1,0 +1,27 @@
+DRAFT. REVIEW WITH A LAWYER BEFORE USE. NOT LEGAL ADVICE.
+(borrador, revisar con abogado)
+
+LOGITRATION CONTRIBUTOR LICENSE AGREEMENT (minimal)
+
+Why: the Licensor offers Logitration under the Business Source License 1.1 and under commercial licenses. To be able to do
+both, the Licensor needs the right to license every contribution under any terms. This text gives that right and nothing more.
+
+1. Definitions. "Contribution" means any code, text, test or other material you submit to the Logitration project.
+   "Licensor" means David Ragel [DRAFT: or the final signatory].
+2. Copyright. You keep the copyright in your Contribution. You grant the Licensor a perpetual, worldwide, non-exclusive,
+   royalty-free, irrevocable license to use, copy, modify, publish, distribute and sublicense your Contribution, in any form
+   and under any license terms, including commercial licenses and the Business Source License 1.1 and its Change License.
+3. Patents. You grant the Licensor and the recipients of the software a perpetual, worldwide, royalty-free, irrevocable
+   patent license for patents you own that your Contribution necessarily infringes.
+4. Your promises. The Contribution is your own work (or you have the right to submit it), it does not knowingly infringe third
+   party rights, and if your employer has rights in it, you have their permission.
+5. No obligation. The Licensor may accept or reject any Contribution. You receive no payment [DRAFT: decide whether
+   collaborators receive a share of commercial licensing income; if so, it goes in a separate agreement].
+6. Credit. The Licensor will keep your name in the contributors list [DRAFT: decide].
+7. No warranty. Contributions are provided "as is".
+8. Law. [DRAFT: governing law and court to be chosen by the Licensor with a lawyer.]
+
+Signed (name, date, email): ______________________________
+
+Open point for a lawyer: whether a lighter route (a "Developer Certificate of Origin" plus this license grant) is enough, and how
+to treat collaborators who already contributed before this agreement (for example earlier collaborators).

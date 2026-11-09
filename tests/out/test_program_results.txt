@@ -1,0 +1,87 @@
+== 1. the specification is built from the file
+  [ok  ] two programs: observe installed, act install
+  [ok  ] the arguments come from the phrase installed(M, X) (and the act/2 command [install, M, X])
+  [ok  ] the definition sentence is the user's phrase
+  [ok  ] the names the cases use come from the conversation
+  [ok  ] ...and from the pretend world
+  [ok  ] the header is the signature, the door and the commands allowed
+  [ok  ] an act script has no defaults and must raise when the command fails
+  [ok  ] level 0 is the name only; 1 adds the signature; 2 more
+  [ok  ] level 2 adds the user's words and the conversation examples
+  [ok  ] a retry carries the previous script and its error
+  [ok  ] the cases: everything, each name as a question, and the pairs
+  [ok  ] an act script is also tried on something that cannot be done (it must raise)
+== 2. validator (AST)
+  [ok  ] the recorded scripts pass
+  [ok  ] import of os refused
+  [ok  ] from subprocess import refused
+  [ok  ] eval refused
+  [ok  ] open refused
+  [ok  ] dunder attribute refused
+  [ok  ] the door has only run and machines
+  [ok  ] a command that was not declared via is refused
+  [ok  ] wrong signature refused
+  [ok  ] wrong argument names refused
+  [ok  ] the function must exist
+  [ok  ] syntax error reported with its line
+  [ok  ] code that runs on import refused
+  [ok  ] classes refused
+  [ok  ] markdown fences are stripped
+== 3. rehearsal world and cases
+  [ok  ] the recorded second attempt passes every case
+  [ok  ] the recorded first attempt fails: it reports `mistral:latest` where the world says mistral
+  [ok  ] a script that hides a failed command is caught by the case that cannot be done
+  [ok  ] an endless loop becomes a failure, not a hang
+  [ok  ] wrong shape of the result is said
+  [ok  ] the pretend ollama prints a table like the real one, with :latest
+  [ok  ] pull: unknown model fails; a known one is added
+  [ok  ] rm: removes, then says not found
+  [ok  ] unknown command: rc 127
+  [ok  ] unknown machine raises
+  [ok  ] the door refuses a command not declared
+  [ok  ] the door does not show the oracle
+== 4. the retry loop (recorded model)
+  [ok  ] first attempt fails the rehearsal, the second is accepted
+  [ok  ] the second prompt carries the first script and the error of the rehearsal
+  [ok  ] a script the validator refuses is not even tried; the reason goes to the next prompt
+  [ok  ] three failures: the informe says what was wanted and what each attempt did
+  [ok  ] the budget of calls stops the loop
+== 5. anchoring; the scripts as observe and device
+  [ok  ] anchored: programs/installed.py + .json, version 1
+  [ok  ] the metadata keeps the specification and the reason
+  [ok  ] anchoring again is version 2 and keeps v1
+  [ok  ] the agent loads the anchored programs without notes
+  [ok  ] the anchored observe script is what the agent looks with
+  [ok  ] the anchored act script is the device of act/2
+  [ok  ] logi check --program: the conversation of the file passes with the anchored scripts
+  [ok  ] every agent starts from the rehearsal world as written in the file (the pull of the other session was on its copy)
+  [ok  ] a script edited after anchoring is refused (hash), with the way out
+  [ok  ] a script that no longer validates is never run
+  [ok  ] without --program nothing of programs/ runs
+== 6. logi spec / logi program / lint
+  [ok  ] logi spec prints both specifications
+  [ok  ] logi spec writes nothing and calls no model
+  [ok  ] logi spec --level 0 shows the prompt without the signature
+  [ok  ] Spanish alias: especificar
+  [ok  ] lint notes the programs that are not built yet
+  [ok  ] logi program: attempt, error, attempt, anchored, for each script
+  [ok  ] the trace keeps spec, prompt, response, validation and rehearsal of every attempt
+  [ok  ] the summary counts the calls
+  [ok  ] logi program does not build again what is anchored (no new call)
+  [ok  ] --force anchors a new version
+  [ok  ] when it cannot, it says what is missing and anchors nothing; exit 1
+  [ok  ] --calls caps the model calls in all
+== 7. the `-- program` lines
+  [ok  ] 'observe installed(M, X)' -> say which command
+  [ok  ] 'observe nothing(M, X) via ollama' -> has no word line
+  [ok  ] 'act borrow via ollama' -> no act(Fact, [borrow
+  [ok  ] 'frobnicate x' -> under `-- program` write
+  [ok  ] 'rehearse m2 qwen2' -> write  rehearse m1
+  [ok  ] '-- programs' -> unknown meta-interpreter
+  [ok  ] comments after a line are ignored; via and rehearse are read
+  [ok  ] lint warns when there is nothing to try the scripts on
+== 8. a `set` fact
+  [ok  ] two facts with the same first argument are both true (a plain `changes` fact would keep one)
+  [ok  ] make adds a member of the set (command: install m1 llama3)
+
+checks: 77   failures: 0

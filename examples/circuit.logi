@@ -1,0 +1,57 @@
+# circuit.logi: an A2A agent that controls an electric circuit.
+# You write 4 things in this order: conversation, facts, rules, meta-interpreters. Then:   logi try circuit.logi
+name: circuit
+about: electrical circuits
+
+== 1. conversation
+# How a client talks to the agent, and what the agent must answer (each agent line must appear in its reply).
+client: mains is a source. l1 is a lamp. sw is a switch. f1 is a fuse
+client: f1 gets current from mains if f1 is ok. l1 gets current from f1 if sw is up
+agent:  Is sw up or down?
+client: sw is down
+agent:  This is what I understood:
+client: yes
+agent:  Now: nothing is lit.
+client: why is l1 not lit?
+agent:  It would need: sw is up (now sw is down, since the start).
+client: make l1 lit
+agent:  Done: sw is up (command: relay sw up).
+        Now: l1 is lit.
+client: then f1 blows
+client: make l1 lit
+agent:  I cannot make it true by myself: l1 is lit.
+        f1 is not blown (I am not allowed to change: f1 is not blown)
+
+== 2. facts
+# What the client tells the agent, and the words for it (the first form is how the agent speaks).
+source(X)             = {X} is a source
+lamp(X)               = {X} is a lamp
+switch(X)             = {X} is a switch
+fuse(X)               = {X} is a fuse
+feeds(To, From)       = {To} gets current from {From}
+feeds(To, From, P, V) = {To} gets current from {From} if {P} is {V}
+state(X, V)           = {X} is {V} | raise {X}{V=up} | lower {X}{V=down} | {X} blows{V=blown} | repair {X}{V=ok}   [changes; V: ok up down blown]
+
+== 3. rules
+# What follows from the facts: the words of what the rules decide, then the rules. Clients can ask these.
+lit(L)                = {L} is lit
+lit(L) :- lamp(L), \+ state(L, blown), current(L).
+current(X) :- source(X).
+current(X) :- feeds(X, Y), current(Y).
+current(X) :- feeds(X, Y, P, V), in(P, V), current(Y).
+in(P, ok) :- \+ state(P, blown).
+in(P, V) :- V \== ok, state(P, V).
+
+== 4. meta-interpreters
+# What runs ON your facts and rules: three, all optional (without them: sensible defaults).
+-- check
+# decides and explains:  explain(G, Words)  how to say why G holds, instead of showing its proof
+explain(source(S), [S, 'is the mains supply']).
+-- execute
+# acts on the world:  can_change(F) what it may change when a client says "make ...";  act(F, Command) what the device gets
+can_change(state(S, _)) :- switch(S).
+act(state(S, V), [relay, S, V]).
+-- complete
+# finds what is missing:  missing(F) what it must ask before loading;  ask(F, Words) how to ask it
+missing(state(S, _)) :- switch(S), \+ state(S, _).
+ask(state(S, _), ['Is', S, 'up or down?']).

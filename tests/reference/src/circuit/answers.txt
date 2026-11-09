@@ -1,0 +1,51 @@
+?- Which lamps are lit after the assembly?
+   lit(36, Ls), print(Ls)
+[l2]
+
+?- How do you know l2 is lit after the assembly? (proof tree)
+   how(36, l2, A), print(A)
+proof(is_lit(l2),(proof(lamp(l2),true)&proof(ok(l2),true)&proof(has_current(l2),(proof(connected(l2,c4),true)&proof(has_current(c4),(proof(connected(c4,c3),proof(up(i3),true))&proof(has_current(c3),(proof(connected(c3,c5),proof(ok(cc1),true))&proof(has_current(c5),(proof(connected(c5,source),true)&proof(has_current(source),true)))))))))))
+
+?- Which events support l2 being lit after the assembly?
+   supporting(36, l2, Es), forall(member(E-X, Es), (print(E-X), nl))
+3-lamp(l2)
+4-ok(l2)
+10-up(i3)
+12-ok(cc1)
+24-has_current(source)
+30-connected(l2,c4)
+31-connected(c4,c3)
+33-connected(c3,c5)
+36-connected(c5,source)
+
+?- Why did l1 change when going from 'assembly' to 'I raise i1'?
+   forall(why(36, 37, l1, R), (print(R), nl))
+turned_on([37-up(i1)])
+
+?- Why did l1 change when going from 'I raise i1' to 'cc1 blows'?
+   forall(why(37, 38, l1, R), (print(R), nl))
+turned_off([38-blown(cc1)])
+
+?- Why did l2 change when going from 'I raise i1' to 'cc1 blows'?
+   forall(why(37, 38, l2, R), (print(R), nl))
+turned_off([38-blown(cc1)])
+
+?- Why did l1 change when going from 'cc1 blows' to 'I replace cc1'?
+   forall(why(38, 39, l1, R), (print(R), nl))
+turned_on([39-ok(cc1)])
+
+?- Why did l2 change when going from 'cc1 blows' to 'I replace cc1'?
+   forall(why(38, 39, l2, R), (print(R), nl))
+turned_on([39-ok(cc1)])
+
+?- Why did l1 change when going from 'I replace cc1' to 'I lower i2'?
+   forall(why(39, 40, l1, R), (print(R), nl))
+turned_off([40-down(i2)])
+
+?- Why did l1 change when going from 'I lower i2' to 'I lower i1'?
+   forall(why(40, 41, l1, R), (print(R), nl))
+turned_on([41-down(i1)])
+
+?- Why did l2 change when going from 'I lower i1' to 'l2 blows'?
+   forall(why(41, 42, l2, R), (print(R), nl))
+turned_off([42-blown(l2)])

@@ -1,0 +1,22 @@
+{
+ "name": "installed",
+ "kind": "observe",
+ "version": 1,
+ "anchored": "2026-11-07 15:25",
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "reason": "modelos.logi:31 needs a script (observe) for «{X} is installed on {M}»",
+ "says": [
+  "{X} is installed on {M}"
+ ],
+ "args": [
+  "M",
+  "X"
+ ],
+ "via": [
+  "ollama"
+ ],
+ "level": 2,
+ "sha256": "c9021f54c06806ebf375789a154fe44625aad7bc3f28751a289d59e754e0018a",
+ "spec": "PROGRAM installed  (observe)   modelos.logi:31\n  speaks as : {X} is installed on {M}\n  fact      : installed(M, X)   commands allowed via: ollama\n  names the user uses (conversation and pretend world): M: m1, m2; X: llama3, mistral, qwen2\n  context level 2 (name + signature + your words + conversation examples); 4 conversation turns as examples\n  cases it will be tried on (10):\n     - installed(M=None, X=None)  everything the world says\n     - installed(M='m1', X=None)  as a question\n     - installed(M='m2', X=None)  as a question\n     - installed(M=None, X='llama3')  as a question\n     - installed(M=None, X='mistral')  as a question\n     - installed(M=None, X='qwen2')  as a question\n     - installed(M='m1', X='llama3')  as a question\n     - installed(M='m1', X='mistral')  as a question\n     - installed(M='m2', X='llama3')  as a question\n     - installed(M='m2', X='mistral')  as a question\n\n  --- the prompt, as it goes to the model ---\n  | Write the Python script `installed`: a script that LOOKS at the world (read-only) and reports facts.\n  | \n  | SIGNATURE (write exactly this function):\n  | def installed(world, M=None, X=None):\n  |     \"\"\"Return the list of ALL tuples (M, X) of str that are true now and agree with the arguments that are not None (None means \"any\": it is a variable). Read-only: change nothing. Return [] when nothing matches.\"\"\"\n  | \n  | The only door to the world:\n  |   world.run(machine, command, *args)   runs ONE command on ONE machine, without a shell: world.run(\"m1\", \"ollama\", ...).\n  |     It returns an object with .rc (int, the exit code), .out (str, stdout) and .err (str, stderr). It raises RuntimeError if the machine is unknown.\n  |     Commands you may use: ollama. Nothing else is reachable (no files, no network, no subprocess).\n  | world.machines()                       returns the list of machine names (str).\n  | Imports allowed: re, json. Define the function installed; helpers are allowed.\n  | \n  | What the user wrote about it (modelos.logi, line 31):\n  |   the agent says and understands:  «{X} is installed on {M}»\n  |   names the user uses (conversation and pretend world):  M: m1, m2   X: llama3, mistral, qwen2   (written exactly like this)\n  | The user's conversation with the agent (client asks; the agent must answer with the lines after `agent:`):\n  |   client: which models are on m1?\n  |   agent:  mistral is on m1\n  |   client: is llama3 on m1?\n  |   agent:  No: llama3 is not on m1\n  |   client: get llama3 installed on m1\n  |   agent:  Done: llama3 is installed on m1\n  |   client: is llama3 on m1?\n  |   agent:  Yes: llama3 is on m1\n  | \n  | Answer with the code only."
+}

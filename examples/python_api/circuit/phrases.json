@@ -1,0 +1,14 @@
+{
+  "lit(L)": "{L} is lit",
+  "current(X)": "{X} has current",
+  "source(X)": ["{X} is a source", "there is a source called {X}"],
+  "lamp(X)": ["{X} is a lamp", "there is a lamp called {X}"],
+  "fuse(X)": ["{X} is a fuse", "there is a fuse called {X}"],
+  "switch(X)": ["{X} is a switch", "there is a switch called {X}"],
+  "plug(X)": ["{X} is a plug", "there is a plug called {X}"],
+  "wire(X)": ["{X} is a wire", "there is a wire called {X}"],
+  "socket(X)": ["{X} is a socket", "there is a socket called {X}"],
+  "feeds(To, From)": {"say": ["{To} gets current from {From}", "{From} feeds {To}"], "ask": "What does {To} get current from?"},
+  "feeds(To, From, P, V)": ["{To} gets current from {From} if {P} is {V}"],
+  "state(X, V)": {"say": ["{X} is {V}", "{X} becomes {V}", "raise {X}{V=up}", "lower {X}{V=down}", "{X} blows{V=blown}", "blow {X}{V=blown}", "repair {X}{V=ok}", "replace {X}{V=ok}", "unplug {X}{V=unplugged}", "plug {X}{V=plugged}", "plug in {X}{V=plugged}"], "changes": true, "ask": "Is {X} up or down (or plugged/unplugged)?", "values": {"V": ["up", "down", "plugged", "unplugged", "ok", "blown"]}}
+}

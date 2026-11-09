@@ -1,0 +1,146 @@
+{
+ "title": "two-branch house: living room with two lamps and a hallway with two two-way switches",
+ "style": "Cooperative and tidy: describe the circuit in two or three messages, in full sentences.",
+ "facts": "It is the wiring of your house. The current comes in through a battery (call it batt). A wire from the panel (panel_wire) leaves it and then goes through the main fuse (main_fuse); after that there is a wire you call after_main that feeds two branches. LIVING ROOM: from after_main, through the living room switch (living_sw, which closes the circuit when it is up), runs the wire living_wire, from which two lamps hang in parallel, lamp_a and lamp_b. HALLWAY: the hallway light (hall_light) is controlled from both ends by two two-way switches (hall_sw1 next to the panel and hall_sw2 next to the light), joined by two wires, wire_a and wire_b: hall_sw1 sends the current from after_main to wire_a when it is up and to wire_b when it is down; hall_sw2 picks up wire_a when it is up and wire_b when it is down and feeds hall_light. (That is, the hallway is lit when both two-way switches are in the same position.) STATE AT THE START: living_sw down, hall_sw1 up, hall_sw2 up, all lamps and the fuse in good condition. EVENTS, in this order: 1) you raise living_sw; 2) you lower hall_sw1; 3) lamp_a blows; 4) the main fuse (main_fuse) blows; 5) you repair it; 6) you lower hall_sw2.",
+ "questions": [
+  "Which lamps are lit at the start (before any event)?",
+  "Why is hall_light not lit after lowering hall_sw1 (event 2)?",
+  "Why is lamp_b not lit when the main fuse (main_fuse) blows (event 4)?",
+  "Why did hall_light change over the course of all the events?",
+  "I would like to see the timeline of all the lamps.",
+  "EXTENSION: tell it that after all that (as event 7) you lower living_sw, and ask which lamps are lit now at the end."
+ ],
+ "parts": {
+  "batt": [
+   "source",
+   null
+  ],
+  "panel_wire": [
+   "wire",
+   null
+  ],
+  "main_fuse": [
+   "fuse",
+   null
+  ],
+  "after_main": [
+   "wire",
+   null
+  ],
+  "living_sw": [
+   "switch",
+   "down"
+  ],
+  "living_wire": [
+   "wire",
+   null
+  ],
+  "lamp_a": [
+   "lamp",
+   null
+  ],
+  "lamp_b": [
+   "lamp",
+   null
+  ],
+  "hall_sw1": [
+   "two_way_switch",
+   "up"
+  ],
+  "hall_sw2": [
+   "two_way_switch",
+   "up"
+  ],
+  "wire_a": [
+   "wire",
+   null
+  ],
+  "wire_b": [
+   "wire",
+   null
+  ],
+  "hall_light": [
+   "lamp",
+   null
+  ]
+ },
+ "wires": [
+  [
+   "panel_wire",
+   "batt",
+   null
+  ],
+  [
+   "after_main",
+   "panel_wire",
+   "ok(main_fuse)"
+  ],
+  [
+   "living_wire",
+   "after_main",
+   "up(living_sw)"
+  ],
+  [
+   "lamp_a",
+   "living_wire",
+   null
+  ],
+  [
+   "lamp_b",
+   "living_wire",
+   null
+  ],
+  [
+   "wire_a",
+   "after_main",
+   "up(hall_sw1)"
+  ],
+  [
+   "wire_b",
+   "after_main",
+   "down(hall_sw1)"
+  ],
+  [
+   "hall_light",
+   "wire_a",
+   "up(hall_sw2)"
+  ],
+  [
+   "hall_light",
+   "wire_b",
+   "down(hall_sw2)"
+  ]
+ ],
+ "events": [
+  [
+   "raise",
+   "living_sw"
+  ],
+  [
+   "lower",
+   "hall_sw1"
+  ],
+  [
+   "blow",
+   "lamp_a"
+  ],
+  [
+   "blow",
+   "main_fuse"
+  ],
+  [
+   "repair",
+   "main_fuse"
+  ],
+  [
+   "lower",
+   "hall_sw2"
+  ]
+ ],
+ "extra_events": [
+  [
+   "lower",
+   "living_sw"
+  ]
+ ]
+}

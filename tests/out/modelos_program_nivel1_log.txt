@@ -1,0 +1,12 @@
+installed (observe) via ollama: context level 1 (name + signature)
+  attempt 1: validator ok; rehearsal 4/10 cases
+     FAIL installed(M=None, X=None)  everything the world says
+          expected [('m1', 'mistral'), ('m1', 'qwen2'), ('m2', 'qwen2')], got [('m1', 'mistral:latest'), ('m1', 'qwen2:latest'), ('m2', 'qwen2:latest')]
+     FAIL installed(M='m1', X=None)  as a question
+          expected [('m1', 'mistral'), ('m1', 'qwen2')], got [('m1', 'mistral:latest'), ('m1', 'qwen2:latest')]
+  attempt 2: validator ok; rehearsal 10/10 cases -> ACCEPTED
+  anchored programs/installed.py v1 (2 call(s), about $0.020)
+install (act) via ollama: context level 1 (name + signature)
+  attempt 1: validator ok; rehearsal 5/5 cases -> ACCEPTED
+  anchored programs/install.py v1 (1 call(s), about $0.010)
+calls: 3; traces in tests/out/modelos_program_nivel1

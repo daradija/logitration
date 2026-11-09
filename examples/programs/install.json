@@ -1,0 +1,22 @@
+{
+ "name": "install",
+ "kind": "act",
+ "version": 1,
+ "anchored": "2026-11-07 15:25",
+ "model": "claude-sonnet-5-5",
+ "attempts": 1,
+ "reason": "modelos.logi:32 needs a script (act) for «{X} is installed on {M}»",
+ "says": [
+  "{X} is installed on {M}"
+ ],
+ "args": [
+  "M",
+  "X"
+ ],
+ "via": [
+  "ollama"
+ ],
+ "level": 2,
+ "sha256": "6f754f880bddd9184cc09116291c1736b77965d3f4b4460ba5bdb03b83d46806",
+ "spec": "PROGRAM install  (act)   modelos.logi:32\n  speaks as : {X} is installed on {M}\n  fact      : installed(M, X)   commands allowed via: ollama\n  names the user uses (conversation and pretend world): M: m1, m2; X: llama3, mistral, qwen2\n  context level 2 (name + signature + your words + conversation examples); 4 conversation turns as examples\n  cases it will be tried on (5):\n     - install(M='m1', X='llama3')  must do it, twice, without raising\n     - install(M='m1', X='mistral')  must do it, twice, without raising\n     - install(M='m2', X='llama3')  must do it, twice, without raising\n     - install(M='m2', X='mistral')  must do it, twice, without raising\n     - install(M='m1', X='nosuchmodel-xyz')  cannot be done: must RAISE, not pretend\n\n  --- the prompt, as it goes to the model ---\n  | Write the Python script `install`: a script that CHANGES the world.\n  | \n  | SIGNATURE (write exactly this function):\n  | def install(world, M, X):\n  |     \"\"\"Make true: \"{X} is installed on {M}\". Arguments are str. Return a short text saying what was done. Raise RuntimeError(message) when it could not be done (never hide a failed command). Safe to run twice.\"\"\"\n  | \n  | The only door to the world:\n  |   world.run(machine, command, *args)   runs ONE command on ONE machine, without a shell: world.run(\"m1\", \"ollama\", ...).\n  |     It returns an object with .rc (int, the exit code), .out (str, stdout) and .err (str, stderr). It raises RuntimeError if the machine is unknown.\n  |     Commands you may use: ollama. Nothing else is reachable (no files, no network, no subprocess).\n  | world.machines()                       returns the list of machine names (str).\n  | Imports allowed: re, json. Define the function install; helpers are allowed.\n  | \n  | What the user wrote about it (modelos.logi, line 32):\n  |   the agent says and understands:  «{X} is installed on {M}»\n  |   names the user uses (conversation and pretend world):  M: m1, m2   X: llama3, mistral, qwen2   (written exactly like this)\n  | The user's conversation with the agent (client asks; the agent must answer with the lines after `agent:`):\n  |   client: which models are on m1?\n  |   agent:  mistral is on m1\n  |   client: is llama3 on m1?\n  |   agent:  No: llama3 is not on m1\n  |   client: get llama3 installed on m1\n  |   agent:  Done: llama3 is installed on m1\n  |   client: is llama3 on m1?\n  |   agent:  Yes: llama3 is on m1\n  | \n  | Answer with the code only."
+}

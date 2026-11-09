@@ -1,0 +1,137 @@
+{
+ "title": "garage: main light with two switches in parallel and an emergency light with its own battery, fuse and test button",
+ "style": "Normal, clear but not exhaustive; if the agent asks something, answer exactly that.",
+ "facts": "It is your garage. THERE ARE TWO SOURCES OF CURRENT: the garage mains (garage_mains) and an emergency battery (backup_battery). From garage_mains runs a main wire (garage_wire). From garage_wire two wires leave, door_wire and back_wire, each controlled by its own switch: door_sw (next to the door) controls door_wire and back_sw (at the back) controls back_wire; each switch closes its wire when it is up. Both wires, door_wire and back_wire, go to the same main light (garage_light): it is enough for ONE of the two switches to be up for it to be lit (they are in parallel). EMERGENCY LIGHT (em_light): it gets current from a wire em_wire. em_wire gets current from backup_battery through the fuse em_fuse (if em_fuse is in good condition), and ALSO from garage_wire through a test button test_sw (when test_sw is up). STATE AT THE START: door_sw down, back_sw down, test_sw down, fuse em_fuse and lamps in good condition. EVENTS, in this order: 1) you raise door_sw; 2) you raise back_sw; 3) you lower door_sw; 4) you lower back_sw; 5) em_fuse blows; 6) you raise test_sw.",
+ "questions": [
+  "Which lamps are lit at the start?",
+  "Why is garage_light not lit at the start?",
+  "Why is garage_light lit after event 3 (when you have already lowered door_sw)?",
+  "Why is em_light not lit after event 5?",
+  "Why did garage_light change over the course of all the events?",
+  "EXTENSION: tell it that after all that (event 7) you lower test_sw, and ask why em_light is not lit at the end."
+ ],
+ "parts": {
+  "garage_mains": [
+   "source",
+   null
+  ],
+  "backup_battery": [
+   "source",
+   null
+  ],
+  "garage_wire": [
+   "wire",
+   null
+  ],
+  "door_wire": [
+   "wire",
+   null
+  ],
+  "back_wire": [
+   "wire",
+   null
+  ],
+  "door_sw": [
+   "switch",
+   "down"
+  ],
+  "back_sw": [
+   "switch",
+   "down"
+  ],
+  "test_sw": [
+   "switch",
+   "down"
+  ],
+  "garage_light": [
+   "lamp",
+   null
+  ],
+  "em_wire": [
+   "wire",
+   null
+  ],
+  "em_fuse": [
+   "fuse",
+   null
+  ],
+  "em_light": [
+   "lamp",
+   null
+  ]
+ },
+ "wires": [
+  [
+   "garage_wire",
+   "garage_mains",
+   null
+  ],
+  [
+   "door_wire",
+   "garage_wire",
+   "up(door_sw)"
+  ],
+  [
+   "back_wire",
+   "garage_wire",
+   "up(back_sw)"
+  ],
+  [
+   "garage_light",
+   "door_wire",
+   null
+  ],
+  [
+   "garage_light",
+   "back_wire",
+   null
+  ],
+  [
+   "em_wire",
+   "backup_battery",
+   "ok(em_fuse)"
+  ],
+  [
+   "em_wire",
+   "garage_wire",
+   "up(test_sw)"
+  ],
+  [
+   "em_light",
+   "em_wire",
+   null
+  ]
+ ],
+ "events": [
+  [
+   "raise",
+   "door_sw"
+  ],
+  [
+   "raise",
+   "back_sw"
+  ],
+  [
+   "lower",
+   "door_sw"
+  ],
+  [
+   "lower",
+   "back_sw"
+  ],
+  [
+   "blow",
+   "em_fuse"
+  ],
+  [
+   "raise",
+   "test_sw"
+  ]
+ ],
+ "extra_events": [
+  [
+   "lower",
+   "test_sw"
+  ]
+ ]
+}

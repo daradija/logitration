@@ -1,0 +1,16 @@
+Logitration library, (c) 2026 David Ragel. Business Source License 1.1 (see LICENSE).
+
+Third-party / vendored material
+-------------------------------
+tests/reference/ is a copy, made on 2026-11-08, of parts of the "circuit-a2a" project (the original circuit
+agent that logitration reimplements as a general library), by the same author, MIT License
+(tests/reference/LICENSE-MIT). Copied unchanged:
+  tests/reference/src/circuit_a2a/   (the original core and its plain-Python simulator)
+  tests/reference/src/circuit/       (its Prolog sources, e.g. events.pl)
+  tests/reference/src/metainterp/    (its meta-interpreters)
+  tests/reference/examples/scenarios/ (house, workshop, garage)
+It is used only by tests/test_library.py (section 1: the library's circuit example is compared, step by step,
+with the original). It is not part of the installed package and the BSL does not apply to it: it stays MIT.
+
+The text of the Business Source License 1.1 is (c) 2023 MariaDB plc; "Business Source License" is a trademark
+of MariaDB plc. Only the Parameters block is Logitration's.

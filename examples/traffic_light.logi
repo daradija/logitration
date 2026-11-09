@@ -1,0 +1,29 @@
+# traffic_light.logi: the smallest idea. One crossing, one light; the agent turns it red when asked.
+# Try it:  logi try traffic_light.logi
+name: traffic-light
+about: a pedestrian crossing
+
+== 1. conversation
+client: c1 is a crossing
+agent:  What colour is the light at c1?
+client: the light at c1 is green
+client: yes
+agent:  Now: nothing is safe to cross.
+client: make c1 safe to cross
+agent:  Done: the light at c1 is red (command: lights c1 red).
+
+== 2. facts
+crossing(C) = {C} is a crossing
+light(C, V) = the light at {C} is {V} | the light at {C} turns {V}   [changes; V: green amber red]
+
+== 3. rules
+safe(C)     = {C} is safe to cross
+safe(C) :- crossing(C), light(C, red).
+
+== 4. meta-interpreters
+-- execute
+act(light(C, V), [lights, C, V]).
+# no can_change/1: by default the agent may change any fact that changes (here, the light)
+-- complete
+missing(light(C, _)) :- crossing(C), \+ light(C, _).
+ask(light(C, _), ['What colour is the light at', C, '?']).

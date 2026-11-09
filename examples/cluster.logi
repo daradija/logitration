@@ -1,0 +1,69 @@
+# cluster.logi: an A2A agent that controls a cluster of computers for language-model jobs.
+#   logi try cluster.logi --observe     logi serve cluster.logi --observe --translator claude-cli --device ./launcher
+# The agent LOOKS at the cluster itself (observe_cluster.py); the client (an LLM, or another agent) only asks:
+# where can a job run, which node has the most ram or disk, and finally "get j1 running on n3".
+name: cluster
+about: cluster of computers for language-model jobs
+
+== 1. conversation
+client: what can I ask?
+agent:  You can ask me, for example
+agent:  where can j1 run?
+client: where can j1 run?
+agent:  j1 is runnable on n3
+client: which node has the most ram?
+agent:  n3 has the most ram
+client: which node has the most disk?
+agent:  n3 has the most disk
+client: where can j3 run?
+agent:  To answer that I need to know: How many GB of ram does j3 need to run?
+client: j3 needs 4 GB of ram
+agent:  This is what I understood:
+agent:  j3 needs 4 GB of ram
+client: yes
+agent:  j3 is runnable on n3
+client: why is j1 too big for n2?
+agent:  n2 has only 64 GB of ram and j1 needs 120
+client: get j1 running on n2
+agent:  I cannot make it true by myself
+client: get j1 running on n3
+agent:  Done: j1 is running on n3 (command: launch j1 n3)
+client: put j1 on the best node
+agent:  I did not understand that
+agent:  You can ask me, for example
+
+== 2. facts
+# What the agent sees, and the structure every resource shares: a node HAS an amount of a resource, a job NEEDS it
+# (ram, disk; later gpu: add it to R). The arguments are TYPED (N:name, R:ram|disk, G:int>=0): a fact that does not fit is
+# refused before it reaches the rules. Nobody types these: the observe command prints them.
+node(N)           = {N} is a node
+job(J)            = {J} is a job
+capacity(N:name, R:ram|disk, G:int>=0) = {N} has {G} GB of {R}
+demand(J:name, R:ram|disk, G:int>=0)   = {J} needs {G} GB of {R}
+runs(J, N)        = {J} is running on {N}      [changes]
+observe: python3 observe_cluster.py
+
+== 3. rules
+# What follows from the facts. The words of each answer come first.
+runnable(J, N) = {J} is runnable on {N} | where can {J} run{N=?}
+too_big(J, N)  = {J} is too big for {N}
+short(J, N, R) = {N} lacks the {R} of {J}
+most(N, R)     = {N} has the most {R}
+runnable(J, N) :- job(J), node(N), \+ too_big(J, N).
+too_big(J, N) :- short(J, N, _).
+short(J, N, R) :- demand(J, R, D), capacity(N, R, C), C < D.
+most(N, R) :- aggregate_all(max(C, M), capacity(M, R, C), max(_, N)).
+
+== 4. meta-interpreters
+# Three, each optional. They run ON the facts and the rules; they do not hold facts or rules of their own.
+-- check
+# decides and explains: how to say why
+explain(short(J, N, R), [N, 'has only', C, 'GB of', R, 'and', J, 'needs', D]) :- demand(J, R, D), capacity(N, R, C), C < D.
+-- execute
+# acts on the world: what the agent may change by itself, and the command for the device
+can_change(runs(J, N)) :- runnable(J, N).
+act(runs(J, N), [launch, J, N]).
+-- complete
+# finds what is missing: what it needs to know before answering, and how to ask it
+missing(demand(J, R, _)) :- job(J), member(R, [ram, disk]), \+ demand(J, R, _).
+ask(demand(J, R, _), ['How many GB of', R, 'does', J, 'need to run?']).

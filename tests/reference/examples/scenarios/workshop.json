@@ -1,0 +1,108 @@
+{
+ "title": "workshop with a socket, plug, power strip, switched desk lamp and fluorescent with a fuse (terse, incomplete description)",
+ "style": "Terse and in a hurry, colloquial. First message: only the essentials (what there is and what hangs from what), WITHOUT giving initial positions or events. Give each extra datum only when the agent asks you for it. When you tell the events say 'I switch it off' / 'I switch it on' for the switch s1 at least once (in your workshop, switching s1 on is raising it and switching it off is lowering it) and 'I switch the plug off' once instead of 'I unplug'.",
+ "facts": "It is your workshop. The power is the mains: a socket (wall1) fed by the input (src). From that socket a power strip (strip1) is fed, but it only gets current if the strip's plug (plug1) is plugged in. Two appliances hang from the strip: a table lamp (desk_lamp) controlled by the switch s1 (closes when up) and a fluorescent (fluo) protected by a fuse f1 (if f1 blows, fluo gets no current). STATE AT THE START: plug1 plugged in, s1 down, fuse and lamps in good condition. EVENTS, in this order: 1) f1 blows; 2) you repair it; 3) you unplug plug1; 4) you raise s1; 5) you plug plug1 in again.",
+ "questions": [
+  "Which lamps are lit at the start?",
+  "Why is the lamp (desk_lamp) not lit at the start?",
+  "Why did the fluorescent go out the first time (with event 1)?",
+  "And why is nothing lit after unplugging the plug (event 3)?",
+  "Which lamps are lit at each step? (timeline)",
+  "EXTENSION: tell it that after all that (event 6) the lamp (desk_lamp) blows, and ask why it is not lit at the end."
+ ],
+ "parts": {
+  "src": [
+   "source",
+   null
+  ],
+  "wall1": [
+   "socket",
+   null
+  ],
+  "plug1": [
+   "plug",
+   "up"
+  ],
+  "strip1": [
+   "wire",
+   null
+  ],
+  "s1": [
+   "switch",
+   "down"
+  ],
+  "desk_lamp": [
+   "lamp",
+   null
+  ],
+  "f1": [
+   "fuse",
+   null
+  ],
+  "fluo": [
+   "lamp",
+   null
+  ]
+ },
+ "wires": [
+  [
+   "wall1",
+   "src",
+   null
+  ],
+  [
+   "strip1",
+   "wall1",
+   "up(plug1)"
+  ],
+  [
+   "desk_lamp",
+   "strip1",
+   "up(s1)"
+  ],
+  [
+   "fluo",
+   "strip1",
+   "ok(f1)"
+  ]
+ ],
+ "events": [
+  [
+   "blow",
+   "f1"
+  ],
+  [
+   "repair",
+   "f1"
+  ],
+  [
+   "lower",
+   "plug1"
+  ],
+  [
+   "raise",
+   "s1"
+  ],
+  [
+   "raise",
+   "plug1"
+  ]
+ ],
+ "extra_events": [
+  [
+   "blow",
+   "desk_lamp"
+  ]
+ ],
+ "alias": {
+  "strip_plug": "plug1",
+  "table_lamp": "desk_lamp",
+  "fluorescent": "fluo",
+  "power_strip": "strip1",
+  "strip": "strip1",
+  "wall_socket": "wall1",
+  "outlet": "wall1",
+  "mains_socket": "wall1",
+  "mains": "src"
+ }
+}

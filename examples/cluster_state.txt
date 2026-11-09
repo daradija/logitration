@@ -1,0 +1,9 @@
+# What a monitoring tool of the cluster writes (here a plain file, so the example always gives the same answer).
+# node  NAME  FREE_RAM_GB  FREE_DISK_GB
+node n1 16 100
+node n2 64 500
+node n3 256 2000
+# job  NAME  RAM_GB (- = nobody said)  DISK_GB
+job j1 120 300
+job j2 8 20
+job j3 - 1500

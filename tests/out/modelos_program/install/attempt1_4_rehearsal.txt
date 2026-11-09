@@ -1,0 +1,11 @@
+5/5 cases
+ok   install(M='m1', X='llama3')  must do it, twice, without raising
+       ok
+ok   install(M='m1', X='mistral')  must do it, twice, without raising
+       ok
+ok   install(M='m2', X='llama3')  must do it, twice, without raising
+       ok
+ok   install(M='m2', X='mistral')  must do it, twice, without raising
+       ok
+ok   install(M='m1', X='nosuchmodel-xyz')  cannot be done: must RAISE, not pretend
+       raised RuntimeError: could not install nosuchmodel-xyz on m1: Error: pull model m

@@ -1,0 +1,35 @@
+def _has(world, M, X):
+    r = world.run(M, "ollama", "list")
+    if r.rc != 0:
+        raise RuntimeError("ollama list failed on %s: %s" % (M, (r.err or r.out).strip()))
+    want = X.strip()
+    if ":" not in want:
+        want_full = want + ":latest"
+    else:
+        want_full = want
+    lines = r.out.strip().splitlines()
+    for line in lines[1:]:
+        parts = line.split()
+        if not parts:
+            continue
+        name = parts[0]
+        if name == want or name == want_full:
+            return True
+    return False
+
+
+def install(world, M, X):
+    """Make true: "{X} is installed on {M}"."""
+    if M not in world.machines():
+        raise RuntimeError("unknown machine: %s" % M)
+    if not isinstance(X, str) or not X.strip():
+        raise RuntimeError("invalid model name")
+    X = X.strip()
+    if _has(world, M, X):
+        return "%s already installed on %s; nothing to do" % (X, M)
+    r = world.run(M, "ollama", "pull", X)
+    if r.rc != 0:
+        raise RuntimeError("ollama pull %s failed on %s: %s" % (X, M, (r.err or r.out).strip()))
+    if not _has(world, M, X):
+        raise RuntimeError("%s not listed on %s after pull" % (X, M))
+    return "pulled %s on %s" % (X, M)
