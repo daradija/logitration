@@ -1,12 +1,14 @@
+#!/usr/bin/env python3
 # Copyright (c) 2026 David Ragel
 # SPDX-License-Identifier: BUSL-1.1
 # Licensed under the Business Source License 1.1; see LICENSE.
 """A LOCAL BUILDING of agents for `logi`, with one command. Stdlib only, Python 3.9+.
 
-    logi building start [--persistent] [--token-stdin] [--no-token] [--port N]
+    logi building start [--persistent] [--token-stdin] [--no-token] [--port N] [--open | --no-open] [--no-web]
+    logi building open [--no-open]       (a new single-use sign-in link for the web screen of a running building)
     logi building status | stop | uninstall [--keep-token]
 
-(`logi edificio ...` also works; or `python3 -m logitration building start|status|stop|uninstall`)
+(`logi edificio ...` also works; or, without installing logi: python3 edificio.py start|status|stop|uninstall)
 
 What `start` does (idempotent: running it again duplicates nothing and breaks nothing):
   1. checks requirements (python >= 3.9, `claude` in PATH or says so, a free port);
@@ -16,8 +18,10 @@ What `start` does (idempotent: running it again duplicates nothing and breaks no
   4. asks for the Claude TOKEN if missing: env var CLAUDE_CODE_OAUTH_TOKEN or LOGI_EDIFICIO_TOKEN, or the file ~/.logi_edificio/token (600), or it
      prompts you (hidden; the one from `claude setup-token`), or --token-stdin; empty Enter = use your `claude login` if there is a session,
      otherwise SIMULATED mode;
-  5. starts the building, creates the `director` room (real Claude if there is a token or session; otherwise a FAKE claude, and it says so)
-     and prints the local URL.
+  5. starts the building, creates the `director` room (real Claude if there is a token or session; otherwise a FAKE claude, and it says so);
+  6. starts the WEB SCREEN of the building (floor plan, rooms, chat with the director) on 127.0.0.1 and a free port of its own, and opens it in your
+     browser when run from an interactive terminal (--open is the default there; --no-open prints the link instead; LOGI_BUILDING_NO_OPEN=1 never opens).
+     Access needs a random local secret (~/.logi_edificio/web_token, mode 600; not a user password). The link that is opened is single use and expires.
 No LaunchAgent by default; --persistent writes a plist in ~/Library/LaunchAgents only if that directory is yours.
 The token: never in argv, logs, the `ps` environment or the plist: a 600 file, which the anchor hands to claude by file descriptor.
 No pkill/pgrep: only processes whose pid the building itself saved (and verified with ps) are stopped.
@@ -25,6 +29,7 @@ No pkill/pgrep: only processes whose pid the building itself saved (and verified
 import getpass
 import hashlib
 import json
+import secrets
 import os
 import shutil
 import signal
@@ -51,6 +56,14 @@ def seg():
 
 def pkg():
     return os.path.join(inst(), "edificio_pyro")
+
+
+def webdir():
+    return os.path.join(inst(), "web")
+
+
+def _web_token():
+    return os.path.join(seg(), "web_token")
 
 
 def _token():
@@ -261,6 +274,9 @@ def pids_propios():
                 d = lee_json(ruta, {})
                 if isinstance(d, dict) and isinstance(d.get("pid"), int):
                     cand.append(d["pid"])
+    d = lee_json(os.path.join(webdir(), "web.pid"), {})
+    if isinstance(d, dict) and isinstance(d.get("pid"), int):
+        cand.append(d["pid"])
     ad = os.path.join(P, "estado")
     if os.path.isdir(ad):
         for f in os.listdir(ad):
@@ -345,6 +361,106 @@ def crea_director(modo):
     return r.stdout.strip()[:200]
 
 
+# ---------------------------------------------------------------- web screen (own process, own port, loopback, access secret)
+WEB_FILE = "edificio_web.py"
+
+
+def web_bundled():
+    aqui = os.path.dirname(os.path.abspath(__file__))
+    for n in (WEB_FILE, "logi_" + WEB_FILE):
+        if os.path.isfile(os.path.join(aqui, n)):
+            return os.path.join(aqui, n)
+    raise SystemExit("%s is missing next to this module" % WEB_FILE)
+
+
+def web_puerto_vivo():
+    """The web port if its process is ours and answers /ping, else None."""
+    d = lee_json(os.path.join(webdir(), "web.pid"), {})
+    if not (isinstance(d, dict) and isinstance(d.get("pid"), int) and isinstance(d.get("port"), int) and pid_vivo(d["pid"]) and WEB_FILE in comando(d["pid"])):
+        return None
+    s = socket.socket()
+    s.settimeout(1)
+    try:
+        return d["port"] if s.connect_ex(("127.0.0.1", d["port"])) == 0 else None
+    finally:
+        s.close()
+
+
+def asegura_secreto_web():
+    """Random access secret, created on the first start, mode 600; never in argv, logs, the environment or the plist."""
+    if not (os.path.isfile(_web_token()) and len(open(_web_token()).read().strip()) >= 32):
+        escribe600(_web_token(), secrets.token_urlsafe(32) + "\n")
+
+
+def arranca_web(evitar):
+    """Starts (or keeps) the web screen. Returns its port. The module is copied under ~/logi_edificio/web so the process is recognisably ours."""
+    asegura_secreto_web()
+    os.makedirs(webdir(), mode=0o700, exist_ok=True)
+    dest = os.path.join(webdir(), WEB_FILE)
+    nuevo = open(web_bundled(), "rb").read()
+    igual = os.path.isfile(dest) and open(dest, "rb").read() == nuevo
+    vivo = web_puerto_vivo()
+    if vivo and igual:
+        return vivo
+    if vivo:                                               # a different version is running: restart it
+        try:
+            os.kill(lee_json(os.path.join(webdir(), "web.pid"), {})["pid"], signal.SIGTERM)    # only the pid it saved (checked by web_puerto_vivo)
+        except (OSError, KeyError, TypeError):
+            pass
+        time.sleep(0.8)
+    with open(dest + ".tmp", "wb") as f:
+        f.write(nuevo)
+    os.replace(dest + ".tmp", dest)
+    for _ in range(5):
+        puerto = puerto_libre()
+        if puerto not in evitar:
+            break
+    e = entorno()
+    e.update(LOGI_WEB_PKG=pkg(), LOGI_WEB_SEG=seg(), LOGI_WEB_PORT=str(puerto))
+    log = open(os.path.join(webdir(), "web.log"), "a")
+    subprocess.Popen([sys.executable, dest], cwd=webdir(), env=e, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
+    for _ in range(50):
+        if web_puerto_vivo() == puerto:
+            return puerto
+        time.sleep(0.1)
+    raise SystemExit("the web screen did not start; see %s" % os.path.join(webdir(), "web.log"))
+
+
+def enlace_web(puerto):
+    """A new single-use sign-in link (valid 10 min). The secret itself never goes in a URL; only this nonce does."""
+    ruta = os.path.join(seg(), "web_nonce.json")
+    lista = [e for e in (lee_json(ruta, []) or []) if isinstance(e, dict) and e.get("exp", 0) > time.time()][-4:]
+    n = secrets.token_urlsafe(24)
+    lista.append({"n": n, "exp": time.time() + 600})
+    escribe600(ruta, json.dumps(lista))
+    return "http://127.0.0.1:%d/?n=%s" % (puerto, n)
+
+
+def abre_navegador(url):
+    """Opens the browser unless told not to. LOGI_BUILDING_OPEN_CMD replaces `open`/`xdg-open` (tests). Returns a message."""
+    if os.environ.get("LOGI_BUILDING_NO_OPEN"):
+        return "not opening a browser (LOGI_BUILDING_NO_OPEN)"
+    cmd = os.environ.get("LOGI_BUILDING_OPEN_CMD") or ("open" if sys.platform == "darwin" else "xdg-open")
+    exe = shutil.which(cmd) or (cmd if os.path.isfile(cmd) else None)
+    if not exe:
+        return "could not find `%s` to open a browser; open the link by hand" % cmd
+    try:
+        subprocess.Popen([exe, url], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    except OSError as x:
+        return "could not open a browser (%s); open the link by hand" % x
+    return "opened in your browser"
+
+
+def muestra_web(puerto, args, forzar_abrir=False):
+    url = enlace_web(puerto)
+    quiere = "--no-open" not in args and (forzar_abrir or "--open" in args or (sys.stdout.isatty() and sys.stdin.isatty()))
+    di("WEB SCREEN: http://127.0.0.1:%d/   (loopback only; needs the local access secret in %s, which is NOT a password)" % (puerto, _web_token()))
+    if quiere:
+        di("  " + abre_navegador(url) + ". If nothing opened, use this single-use link (valid 10 min): " + url)
+    else:
+        di("  single-use sign-in link (valid 10 min; get another with `logi building open`): " + url)
+
+
 # ---------------------------------------------------------------- persistencia (opcional)
 def plist_texto(puerto):
     py = sys.executable
@@ -407,16 +523,19 @@ def cmd_start(args):
                 pedido = int(args[i + 1])
         puerto = puerto_libre(pedido)
     modo_previo = (lee_json(_estado(), {}) or {}).get("modo")
+    sin_web = "--no-web" in args
     escribe_config(puerto, claude, modo)
     if corre() and modo_previo and modo_previo != modo:
         di("mode changed (%s -> %s): restarting the building; the director comes back with the new Claude" % (modo_previo, modo))
         para_todo()
     r = edificio("arranca")
-    di((r.stdout.strip() or r.stderr.strip()).splitlines()[-1] if (r.stdout or r.stderr).strip() else "start: no output")
+    linea = (r.stdout.strip() or r.stderr.strip()).splitlines()[-1] if (r.stdout or r.stderr).strip() else "start: no output"
+    di("building started" + (" (pid %d)" % corre()["pid"] if corre() else "") if "no hay ninguna" in linea else linea)   # the package says there is no page: now there is one
     if not corre():
         raise SystemExit("the building did not start; see %s" % os.path.join(pkg(), "edificio.log"))
     msg = crea_director(modo)
-    escribe600(_estado(), json.dumps({"puerto": puerto, "modo": modo, "paquete_sha256": PAQUETE_SHA256, "modulo": VERSION_MODULO, "desde": int(time.time())}))
+    wp = None if sin_web else arranca_web({puerto})
+    escribe600(_estado(), json.dumps({"puerto": puerto, "web_puerto": wp, "modo": modo, "paquete_sha256": PAQUETE_SHA256, "modulo": VERSION_MODULO, "desde": int(time.time())}))
     if "--persistent" in args:
         di(hace_persistente(puerto))
     di("director: " + msg)
@@ -430,7 +549,9 @@ def cmd_start(args):
         di("  The director uses your `claude login`. (On macOS the login lives in the keychain: if you start it over ssh, use a token.)")
     else:
         di("  The director uses your token (isolated: own HOME in %s)." % os.path.join(pkg(), "sesiones", "home"))
-    di("  status: logi building status · stop: logi building stop · remove everything: logi building uninstall")
+    if wp:
+        muestra_web(wp, args)
+    di("  status: logi building status · open the web screen: logi building open · stop: logi building stop · remove everything: logi building uninstall")
 
 
 def cmd_status(_a):
@@ -446,6 +567,9 @@ def cmd_status(_a):
         s.close()
         di("A2A local: http://127.0.0.1:%d (%s)" % (est["puerto"], "responding" if ok else "not responding"))
     di(texto_director(sala_director()))
+    wp = web_puerto_vivo()
+    di("web screen: %s" % ("http://127.0.0.1:%d/ (responding; `logi building open` gives a single-use sign-in link)" % wp if wp else "not running"))
+    di("web access secret: %s" % ("saved (600) in " + _web_token() if os.path.isfile(_web_token()) else "none yet"))
     di("token: %s" % ("saved (600) in " + _token() if os.path.isfile(_token()) else "none"))
     di("persistent: %s" % ("yes, " + ruta_plist() if os.path.isfile(ruta_plist()) else "no"))
     for p, c in pids_propios():
@@ -480,6 +604,13 @@ def para_todo():
         except OSError:
             pass
     return len(pids_propios())
+
+
+def cmd_open(args):
+    wp = web_puerto_vivo()
+    if not wp:
+        raise SystemExit("the web screen is not running: `logi building start`")
+    muestra_web(wp, args, forzar_abrir=True)
 
 
 def cmd_stop(_a):
@@ -522,7 +653,7 @@ def main(argv=None):
     if cmd in ("-h", "--help", "help"):
         print(__doc__)
         return 0
-    tabla = {"start": cmd_start, "status": cmd_status, "stop": cmd_stop, "uninstall": cmd_uninstall}
+    tabla = {"start": cmd_start, "open": cmd_open, "status": cmd_status, "stop": cmd_stop, "uninstall": cmd_uninstall}
     if cmd not in tabla:
         print(__doc__)
         return 2

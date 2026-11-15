@@ -12,7 +12,7 @@
     logi program IDEA [--model sonnet] [--calls 12] [--force] [--trace DIR]                    a model writes them; validated, tried, anchored in programs/
   try/serve/check --program uses those scripts (on the file's rehearsal machines; --world ssh:HOST,HOST for real ones)
     logi talk  URL  [message]                                                                talk to a served agent
-    logi building start|status|stop|uninstall [--no-token|--token-stdin] [--persistent] [--port N] [--keep-token]     a local building of agents (see README)
+    logi building start|open|status|stop|uninstall [--no-token|--token-stdin] [--persistent] [--port N] [--no-open] [--no-web] [--keep-token]     a local building of agents with a web screen (see README)
 Spanish aliases: probar, comprobar, servir, hablar. Also: python -m logitration ...
 """
 import argparse
