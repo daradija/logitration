@@ -30,6 +30,16 @@ logi check examples/circuit.logi          # replay the file's conversation; exit
 logi serve examples/circuit.logi --port 8923      # A2A agent: card at http://localhost:8923/.well-known/agent-card.json
 ```
 
+**A local building with a director room, in one command** (see [Local building](#local-building)):
+```
+pip install git+https://github.com/daradija/logitration     # or `pip install .` from a clone
+logi building start        # install + start (127.0.0.1 only) + create the `director` room
+logi building status       # running? which port?
+logi building stop
+logi building uninstall    # stop and delete ~/logi_edificio and ~/.logi_edificio
+```
+It only asks for your Claude token (from `claude setup-token`, hidden): no user name, no password.
+
 ## Examples
 ### I want to control an electric circuit: what do I write?
 One file, `circuit.logi` ([examples/circuit.logi](examples/circuit.logi), 57 lines with comments). In this order:
