@@ -14,3 +14,9 @@ with the original). It is not part of the installed package and the BSL does not
 
 The text of the Business Source License 1.1 is (c) 2023 MariaDB plc; "Business Source License" is a trademark
 of MariaDB plc. Only the Parameters block is Logitration's.
+
+Bundled package
+---------------
+src/logitration/edificio_pyro_0.9.3.tar.gz is the building package (edificio.py, the A2A server and the session anchor) used by
+`logi building`, by the same author, copied unchanged and checked at install time against a fixed sha256. It is under the same
+license as this library (BSL 1.1). It carries no credentials.

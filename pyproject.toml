@@ -19,3 +19,6 @@ logi = "logitration.cli:main"
 [tool.setuptools]
 package-dir = { "" = "src" }
 packages = ["logitration"]
+
+[tool.setuptools.package-data]
+logitration = ["*.tar.gz"]

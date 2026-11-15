@@ -12,6 +12,7 @@
     logi program IDEA [--model sonnet] [--calls 12] [--force] [--trace DIR]                    a model writes them; validated, tried, anchored in programs/
   try/serve/check --program uses those scripts (on the file's rehearsal machines; --world ssh:HOST,HOST for real ones)
     logi talk  URL  [message]                                                                talk to a served agent
+    logi building start|status|stop|uninstall [--no-token|--token-stdin] [--persistent] [--port N] [--keep-token]     a local building of agents (see README)
 Spanish aliases: probar, comprobar, servir, hablar. Also: python -m logitration ...
 """
 import argparse
@@ -300,6 +301,9 @@ def cmd_talk(a):
 
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] in ("building", "edificio"):
+        from logitration import edificio
+        return edificio.main(argv[1:])
     if argv and argv[0] in ALIASES:
         argv[0] = ALIASES[argv[0]]
     p = argparse.ArgumentParser(prog="logi", description="Try, check and serve an idea file (conversation + logic + meta-interpreter).")

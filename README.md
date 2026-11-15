@@ -85,6 +85,18 @@ logi try examples/cluster.logi --observe
 logi serve examples/cluster.logi --observe --translator claude-cli --device ./launcher   # ./launcher gets "launch j1 n3"
 ```
 
+## Local building
+`logi building` gives you a small **local building of agents** on your own computer with one command: it installs the building package (bundled in this repo, checked against a fixed sha256) under `~/logi_edificio`, picks a free port, starts it **listening only on 127.0.0.1** (no connection to any server), and creates a `director` room.
+```
+pip install .                   # from a clone of this repo, or: pip install git+https://github.com/daradija/logitration
+logi building start             # install + start + director; asks for your Claude token (hidden) if it has none
+logi building status            # is it running, which mode, which port, which processes
+logi building stop              # stop it (only the processes it started, by saved pid)
+logi building uninstall         # stop and delete ~/logi_edificio and ~/.logi_edificio   (--keep-token keeps only the token)
+```
+The only thing it asks for is your **Claude token** (the one from `claude setup-token`): there is no user name, no password and no web login, because the building is local and only exposes the A2A agent card at `http://127.0.0.1:PORT/.well-known/agent-card.json`. Other ways to give it: `--token-stdin`, the environment variable `CLAUDE_CODE_OAUTH_TOKEN` or `LOGI_EDIFICIO_TOKEN`, or an empty Enter to use your existing `claude login`. The token is kept in `~/.logi_edificio/token` (mode 600), never in argv, logs, the process environment or this repo. `--no-token` (or no token and no `claude` session) runs the director **simulated** (a fake `claude`, no AI), and says so. `--persistent` (macOS) also installs a LaunchAgent, only if `~/Library/LaunchAgents` is yours; `--port N` asks for a port.
+Requirements: Python 3.9+; `claude` ([Claude Code](https://claude.ai/code)) in your PATH for a real director. `start` is idempotent: running it again duplicates nothing. `logi edificio ...` is the same command. Test: `python tests/test_building.py` (11).
+
 ## The three layers and the four meta-interpreters
 **Facts** (what is there), **rules** (what follows) and **meta-interpreters** (what runs *on* facts and rules): sections `== 2. facts`, `== 3. rules`, `== 4. meta-interpreters`.
 
@@ -123,7 +135,7 @@ Every other line is Prolog. A predicate with rules is something clients **ask**;
 
 Options: `--translator simulated|claude-cli|anthropic-api` (default `simulated`: no model), `--model`, `--device PROGRAM`, `--observe`, `--program`.
 From Python: `load("examples/cluster.logi", translator=..., device=callable, observe=True)` returns a `LogicAgent` ([examples/python_api/](examples/python_api/)).
-Tests, no network, no model: `python tests/test_library.py` (103), `test_ideas.py` (93), `test_design.py` (69), `test_program.py` (77), `test_types.py` (53).
+Tests, no network, no model: `python tests/test_library.py` (103), `test_ideas.py` (93), `test_design.py` (69), `test_program.py` (77), `test_types.py` (53), `test_building.py` (11).
 Limits: `check` compares text, so with an LLM the wording may differ; `observe:` and `programs/` are the file author's code: trust the file.
 
 ## License

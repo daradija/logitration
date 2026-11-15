@@ -28,3 +28,5 @@ jobs:
         run: python tests/test_program.py
       - name: test_types (53)
         run: python tests/test_types.py
+      - name: test_building (11)
+        run: python tests/test_building.py
