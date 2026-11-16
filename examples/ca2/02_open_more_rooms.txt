@@ -1,0 +1,4 @@
+# paste each of these in the chat of the room `director`, one at a time, when ca2 asks for the room
+Please open one more room called criterio (a new Claude session, work folder criterio/, only Claude sonnet, default permissions). Its identity: "You are the agent responsible for criterio.md and you work in criterio/; outside that folder you neither write nor look." Tell me when it is open.
+
+Please open one more room called replica_indice (a new Claude session, work folder replica_indice/, sonnet, default permissions). Its identity: "You are the agent responsible for replica_indice.md and you work in replica_indice/." Tell me when it is open.

@@ -1,0 +1,2 @@
+# paste this in the chat of the room `simulador` (the director gave it a task about synthetic data, so it refuses the real download until you allow it)
+Authorization from the owner: your task is NOT limited to synthetic data. You may and must download REAL data from the internet (Yahoo Finance via yfinance, and the Wikipedia list of S&P 500 companies) to answer investigacion_bolsa. You may install yfinance with pip install --user (in your own HOME). Then answer investigacion_bolsa by message with the CSV path.

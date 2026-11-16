@@ -1,0 +1,15 @@
+# paste this to room investigacion_bolsa (second message, same session) (from the course ca2, "Un objetivo, no una tarea", chapter 2)
+Claude Code 2.1.314, Sonnet 5.5 · 30-10-2026 · sesiones reales de Claude Code
+registro.tsv (investigacion_bolsa/)  ·  idea · % de pares bien ordenados · pnl neto del
+    simulador
+reversion_1d            49,56 %   pnl_neto  -2.180 $
+reversion_5d            49,67 %   pnl_neto  -2.299 $
+momentum_20d            49,91 %   pnl_neto  -3.114 $
+momentum_60d            50,44 %   pnl_neto  -2.202 $
+baja_volatilidad_20d     49,59 %   pnl_neto  -2.106 $
+cierre_en_rango_inverso  49,72 %   pnl_neto  -2.739 $
+
+resultado_momentum_20d.txt  (lo que le devolvió «simulador» por mensaje)
+pares=139078 aciertos=69411 pct_pares=49.91
+ordenes_enviadas=7320 llenas=4094 comisiones=2865.80 pnl_neto=-3114.36
+→ las cifras coinciden con las del investigador

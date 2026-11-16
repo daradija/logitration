@@ -11,11 +11,44 @@ translates between the client's words and facts, and puts the conclusion back in
   <img alt="The local building's screen: the building drawn as a street building with one room per agent, and the chat of the director room with a pinned answer, the play button of each answer and the note recorder" src="docs/img/building-chat-light.png">
 </picture>
 
+Copy and paste, in a terminal (macOS or Linux; Python 3.9+ and [Claude Code](https://claude.ai/code) are the only requirements):
 ```
-pip install git+https://github.com/daradija/logitration     # or `pip install .` from a clone
-logi building start        # install + start (127.0.0.1 only) + create the `director` room + open its web screen
+python3 -m venv ~/logi-env && . ~/logi-env/bin/activate      # a private place for it (the venv has to be active whenever you run `logi`)
+pip install --upgrade pip                                    # needed: an old pip (the macOS system Python has 21.2.4) installs an empty package called UNKNOWN
+pip install git+https://github.com/daradija/logitration     # or, from a clone:  pip install .
+claude setup-token                                           # prints a long-lived token; copy it (Claude Code must be in your PATH)
+logi building start                                          # paste the token when asked (hidden); the web screen opens in your browser
 ```
-That is all: you get the **building drawn as a street building** (one room per agent, a `director` room first, a speech bubble in each room showing what it is doing), and a chat with every room: pin the answers you want to keep, play any answer aloud, record voice notes, attach files. `logi building` also has `open`, `status`, `stop` and `uninstall`, and `start --no-open` prints the sign-in link instead of opening your browser. It asks only for your **Claude token** (from `claude setup-token`, typed hidden): no user name, no password. Without a token the director is **simulated** (no AI) and the screen says so. Requirements: Python 3.9+, and `claude` ([Claude Code](https://claude.ai/code)) in your PATH for a real director.
+That is 5 commands and about 30 seconds (the install takes 5-10 s). `start` does everything: it installs the building, starts it (127.0.0.1 only), creates **one** room, the `director`, and opens its web screen. There are no demo rooms: **the director is the only room** until you ask it for more.
+You get the **building drawn as a street building** (one room per agent, a `director` room first, a speech bubble in each room showing what it is doing), and a chat with every room: pin the answers you want to keep, play any answer aloud, record voice notes, attach files. `logi building` also has `open`, `status`, `stop` and `uninstall`, and `start --no-open` prints the sign-in link instead of opening your browser. It asks only for your **Claude token** (from `claude setup-token`, typed hidden): no user name, no password. Without a token the director is **simulated** (no AI) and the screen says so. Requirements: Python 3.9+, and `claude` ([Claude Code](https://claude.ai/code)) in your PATH for a real director.
+
+### First steps (the screen is in your browser; if it did not open, run `logi building open`)
+1. **Click the `director` room** (the first one, with the top hat): its chat opens on the right. Its first answer is a greeting. If it says it is *HELD by the building's swap guard*, see Troubleshooting.
+2. **Ask it for another room.** Paste into its chat [`examples/ca2/01_open_rooms.txt`](examples/ca2/01_open_rooms.txt) (it opens two rooms, `simulador` and `investigacion_bolsa`, each a real Claude session with its own folder).
+3. **Answer the permission cards.** In the default mode every command a room wants to run needs your yes: the room turns red, the screen shows the command and its options, you click one. (Do not give a room more than you read: a command with `rm`, `sudo` or a path outside the building is a *No*.)
+4. **Talk to a room** like to the director; rooms talk to each other with `SendMessage` (see below).
+5. **Stop or remove it:** `logi building stop`, `logi building uninstall` (it deletes the token too).
+
+### Replicate a whole course with it: ca2, "Un objetivo, no una tarea"
+`ca2` is a course (in Spanish) by the author about agents that work towards a **goal** instead of a task: an agent is *a md + a session + a folder*; two agents talk with `SendMessage`; one builds a daily-candle market simulator, one researches strategies, one (`criterio`) is the yardstick that measures, and one gets a goal with a time limit. All of it was replayed on this local building, with the **real director, real Claude Code 2.1.325 (Sonnet 5.5), default permissions (no bypass)**, on 16 Nov 2026. The prompts are in [`examples/ca2/`](examples/ca2) exactly as the course gives them (paste each one in the chat of the room named in its first line). What happened, in order:
+
+| # | You paste (file) in room | What the rooms did |
+|---|---|---|
+| 1 | `01_open_rooms` in `director` | Opened `simulador` (room 1) and `investigacion_bolsa` (room 2), one folder each under the director's, identity written in each `CLAUDE.md`. |
+| 2 | `03_investigador_pide_datos` in `investigacion_bolsa` | It sent a `SendMessage` to `simulador` asking for the real S&P 500 daily candles. **`simulador` refused**: the director had given it a task about synthetic data. You authorize it (`01b_authorize_real_data` in `simulador`); it then installed yfinance in a venv of its own folder (you approve the command), downloaded **503 of 503 companies, 374,709 candles, 2023-11-17 to 2026-11-16** (Wikipedia list + Yahoo Finance), and answered with the CSV path. |
+| 3 | `04_simulador` in `simulador` | Built the simulator (limit orders, whole shares, one cash account, Interactive Brokers commission). Mechanism test over SPY, AAPL, MSFT, 127 days: 337 orders filled, 117.95 $ commission, labelled "test of the mechanism, not a strategy". |
+| 4 | `05_investigador_mision`, then `06_investigador_primera_idea` in `investigacion_bolsa` | Wrote its md and `registro.tsv` (one line per idea, % of pairs well ordered), asked `simulador` for the simulation of buying the top ten, and measured momentum 20 d: 49.74 % of pairs (50 % is chance). |
+| 5 | (ask the `director`: `02_open_more_rooms`), then `07_criterio` in `criterio`, then `08_candidata_a_criterio` in `investigacion_bolsa` | `investigacion_bolsa` sent its best candidate to `criterio`, which **did not read outside its folder** and asked you to authorize and to fix the cuts; you answer (`08b_owner_answers_criterio`) and it answers by message with the four-criteria table (pairs 50.9 % / top 10 50.8 %; net after costs; alpha per year vs SPY; TAE, drawdown, Calmar, Sharpe of the candidate and of SPY). It also corrected the investigator: its 53.90 % was the share of winning buys, not of pairs. |
+| 6 | (ask the `director`: `02_open_more_rooms`), then `09_objetivo` in `replica_indice` (error 5 %, margin 2 points, 10 minutes) | It asked `simulador` for 100 stocks and a rebalancing run, and `criterio` to measure. The first attempt stalled when you deny a command (`rm` outside its folder); the second ran 634 s and **stopped on the clock**, as the course says it must. First goal met and measured by `criterio`: tracking error 4.20 %/year (limit 5 %). Second goal **not** met: TAE 22.57 % vs SPY 19.89 % (+2.68 points) but alpha above zero in only 2 of 4 years. Its v2 and v3 portfolios were run but not measured when the clock ended. |
+
+Total: about 50 minutes of wall time, 5 rooms, 147 permission answers (every one by a person; the ones with `rm`, `sudo` or an outside path were denied). Three things the course does not tell you, because the rooms are not scripted: a room created with a narrow task refuses what is outside it (authorize it in its chat); a room that obeys "outside this folder you do not look" will ask you for the authorization; and a room that waits for another does not wake up by itself if the other one finishes while you are not watching: answer the cards. The figures are those of the simulator the agents built with Yahoo daily candles: **not real trading, not investment advice**, with look-ahead and survivorship biases that the rooms themselves declared.
+
+### Troubleshooting
+* **`pip install` ends with "Successfully installed UNKNOWN-0.0.0", and `logi` is not found.** Your pip is too old. Run `pip install --upgrade pip` (inside the venv) and install again.
+* **`logi: command not found`.** The venv is not active in this terminal: `. ~/logi-env/bin/activate`.
+* **"director: HELD by the building's swap guard".** The building does not start Claude while the computer uses more than 4096 MB of swap (it protects a computer that is already struggling). Close programs, or if you accept the risk raise the limit of *your copy*: `logi building stop && sed -i.bak 's/^SWAP_MAX_MB = 4096/SWAP_MAX_MB = 16384/' ~/logi_edificio/edificio_pyro/ancla.py && logi building start` (the line is in the installed copy, not in this repo; `uninstall` removes it).
+* **"the director will be SIMULATED".** `claude` is not in your PATH, or you gave no token. Install Claude Code, run `claude setup-token`, and run `logi building start` again.
+* **A room is red.** It asks for a permission: open it and answer (step 3 above).
 
 ### Details
 `logi building` gives you a small **local building of agents** on your own computer with one command, and a web screen to watch and talk to it: it installs the building package (bundled in this repo, checked against a fixed sha256) under `~/logi_edificio`, picks a free port, starts it **listening only on 127.0.0.1** (no connection to any server), creates a `director` room and starts a **web screen** for it.
@@ -46,7 +79,7 @@ What the author's own screen has and this one does **not**: the cluster, power, 
 
 In an interactive terminal `start` opens it in your browser by itself (`--open` is the default there; `--no-open` or `LOGI_BUILDING_NO_OPEN=1` prevent it; with no terminal it only prints the link, `--open` forces it; `--no-web` skips it). `logi building status` shows its URL. A small mirror process (`espejo_local.py`) reads the building's state files every second and feeds the screen; it opens no socket. After a reboot run `logi building start` again (the optional LaunchAgent restarts the building, not the screen).
 The page can send messages to your rooms, so it needs a **local access secret**: a random token created on the first `start`, stored in `~/.logi_edificio/web_token` (mode 600) and never put in argv, logs, the environment or a URL. It is not a user password: it is a secret between your browser and this process. `start` and `logi building open` make a **single-use sign-in link** (`http://127.0.0.1:PORT/?n=...`, valid 10 minutes); opening it sets an `HttpOnly`, `SameSite=Strict` cookie derived from the secret and shows the page. Without the cookie every page, API call and event stream answers 401, a request with an unexpected `Host` header is refused (DNS rebinding), a POST also needs the page's own key and a matching `Origin`, and there are no CORS headers. Other users of the same computer can reach the port but not the page, because they do not have the secret (the file is yours alone). If the swap guard holds the director back (it does while the computer uses more than 4096 MB of swap), the screen says so and your message waits in its mailbox. A demo room only answers with fixed phrases; a simulated director answers `(simulated reply, no Claude) I received: ...`.
-`start` is idempotent: running it again duplicates nothing. `logi edificio ...` is the same command. Test: `python tests/test_building.py` (29).
+`start` is idempotent: running it again duplicates nothing. `logi edificio ...` is the same command. Test: `python tests/test_building.py` (the checks of the message round trip are skipped, and say so, while the swap guard holds the director on that computer).
 
 ## Principles
 * **Logic decides, the model translates.** Rules and facts settle what is true and why (same input, same conclusion). The language model
@@ -169,7 +202,7 @@ Every other line is Prolog. A predicate with rules is something clients **ask**;
 
 Options: `--translator simulated|claude-cli|anthropic-api` (default `simulated`: no model), `--model`, `--device PROGRAM`, `--observe`, `--program`.
 From Python: `load("examples/cluster.logi", translator=..., device=callable, observe=True)` returns a `LogicAgent` ([examples/python_api/](examples/python_api/)).
-Tests, no network, no model: `python tests/test_library.py` (103), `test_ideas.py` (93), `test_design.py` (69), `test_program.py` (77), `test_types.py` (53), `test_building.py` (29).
+Tests, no network, no model: `python tests/test_library.py` (103), `test_ideas.py` (93), `test_design.py` (69), `test_program.py` (77), `test_types.py` (53), `test_building.py` (25 to 29).
 Limits: `check` compares text, so with an LLM the wording may differ; `observe:` and `programs/` are the file author's code: trust the file.
 
 ## License
