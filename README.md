@@ -39,13 +39,14 @@ The only thing it asks for is your **Claude token** (the one from `claude setup-
 - **Chat.** Write to any room; the message goes to the room's mailbox as coming from you, and you see it go *pending, typed, seen, answered*. The answer shows in the room's bubble. Your last request stays fixed at the bottom with its state.
 - **Pin an answer** (the pin) to keep it at the top of the chat, with your question; pins survive a reload. **Play** (the triangle under each answer) reads it aloud with your browser's voice. **Record** (the round buttons next to the room name) records voice notes for a room and plays them back; notes are stored in `~/logi_edificio/web/cache`.
 - **Permissions.** If the director asks for a permission (Claude Code asks before it runs a command), the room turns red and the screen shows the question with its options; your answer goes to the room through its mailbox.
+- **Trusted director.** The `director` room is created trusted, so it can open other rooms for you (up to 6 live ones, in its own folder, sonnet or haiku) without any manual step; `status` shows it. It is only set when the room is created: if you remove it (`python3 ~/logi_edificio/edificio_pyro/edificio.py sesiones confianza director off`), a later `start` does not put it back.
 - **Close / open a room.** The `...` menu of a room closes its session; clicking a room that has no session opens it again. Both use the building's own orders.
 
 What the author's own screen has and this one does **not**: the cluster, power, consumption and trading-account panels, the *Aula* courses and its podcast, the waiting-time games, the per-room web notes, relays by context, the other accounts' colours, the tmux windows (rooms here run in their own pty, not in tmux), and the remote buildings. They depend on the author's own machines and are removed.
 
 In an interactive terminal `start` opens it in your browser by itself (`--open` is the default there; `--no-open` or `LOGI_BUILDING_NO_OPEN=1` prevent it; with no terminal it only prints the link, `--open` forces it; `--no-web` skips it). `logi building status` shows its URL. A small mirror process (`espejo_local.py`) reads the building's state files every second and feeds the screen; it opens no socket. After a reboot run `logi building start` again (the optional LaunchAgent restarts the building, not the screen).
 The page can send messages to your rooms, so it needs a **local access secret**: a random token created on the first `start`, stored in `~/.logi_edificio/web_token` (mode 600) and never put in argv, logs, the environment or a URL. It is not a user password: it is a secret between your browser and this process. `start` and `logi building open` make a **single-use sign-in link** (`http://127.0.0.1:PORT/?n=...`, valid 10 minutes); opening it sets an `HttpOnly`, `SameSite=Strict` cookie derived from the secret and shows the page. Without the cookie every page, API call and event stream answers 401, a request with an unexpected `Host` header is refused (DNS rebinding), a POST also needs the page's own key and a matching `Origin`, and there are no CORS headers. Other users of the same computer can reach the port but not the page, because they do not have the secret (the file is yours alone). If the swap guard holds the director back (it does while the computer uses more than 4096 MB of swap), the screen says so and your message waits in its mailbox. A demo room only answers with fixed phrases; a simulated director answers `(simulated reply, no Claude) I received: ...`.
-`start` is idempotent: running it again duplicates nothing. `logi edificio ...` is the same command. Test: `python tests/test_building.py` (25).
+`start` is idempotent: running it again duplicates nothing. `logi edificio ...` is the same command. Test: `python tests/test_building.py` (29).
 
 ## Principles
 * **Logic decides, the model translates.** Rules and facts settle what is true and why (same input, same conclusion). The language model
@@ -168,7 +169,7 @@ Every other line is Prolog. A predicate with rules is something clients **ask**;
 
 Options: `--translator simulated|claude-cli|anthropic-api` (default `simulated`: no model), `--model`, `--device PROGRAM`, `--observe`, `--program`.
 From Python: `load("examples/cluster.logi", translator=..., device=callable, observe=True)` returns a `LogicAgent` ([examples/python_api/](examples/python_api/)).
-Tests, no network, no model: `python tests/test_library.py` (103), `test_ideas.py` (93), `test_design.py` (69), `test_program.py` (77), `test_types.py` (53), `test_building.py` (25).
+Tests, no network, no model: `python tests/test_library.py` (103), `test_ideas.py` (93), `test_design.py` (69), `test_program.py` (77), `test_types.py` (53), `test_building.py` (29).
 Limits: `check` compares text, so with an LLM the wording may differ; `observe:` and `programs/` are the file author's code: trust the file.
 
 ## License

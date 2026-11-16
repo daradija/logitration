@@ -342,6 +342,12 @@ def sala_director(espera=0.0):
         time.sleep(0.4)
 
 
+def director_confiado():
+    cf = lee_json(os.path.join(pkg(), "config.json"), {})
+    x = ((cf.get("sesiones") or {}).get("fichas") or {}).get("director") if isinstance(cf, dict) else None
+    return isinstance(x, dict) and bool(x.get("confianza"))
+
+
 def texto_director(d):
     if not d:
         return "director: no status card yet"
@@ -389,7 +395,12 @@ def crea_director(modo):
     r = subprocess.run([sys.executable, "-c", codigo, arg], cwd=pkg(), env=entorno(), capture_output=True, text=True, timeout=120, stdin=subprocess.DEVNULL)
     if r.returncode:
         raise SystemExit("could not create the director room: " + (r.stderr.strip().splitlines() or ["?"])[-1][:300])
-    return r.stdout.strip()[:200]
+    # Only here, when the room is created: the director is trusted (it may ask the building to open other rooms). Same as
+    # `edificio.py sesiones confianza director on`; if the user later turns it off, a new `start` does not turn it back on.
+    t = edificio("sesiones", "confianza", "director", "on")
+    if t.returncode:
+        raise SystemExit("director created, but could not mark it trusted: " + (t.stderr.strip().splitlines() or ["?"])[-1][:300])
+    return r.stdout.strip()[:200] + " (trusted: it can open other rooms)"
 
 
 # ---------------------------------------------------------------- web screen (own process, own port, loopback, access secret)
@@ -636,7 +647,7 @@ def cmd_status(_a):
         ok = s.connect_ex(("127.0.0.1", est["puerto"])) == 0
         s.close()
         di("A2A local: http://127.0.0.1:%d (%s)" % (est["puerto"], "responding" if ok else "not responding"))
-    di(texto_director(sala_director()))
+    di(texto_director(sala_director()) + (" · trusted (can open rooms)" if director_confiado() else " · not trusted (`sesiones confianza director on` to let it open rooms)"))
     wp = web_puerto_vivo()
     di("web screen: %s" % ("http://127.0.0.1:%d/ (responding; `logi building open` gives a single-use sign-in link)" % wp if wp else "not running"))
     di("web access secret: %s" % ("saved (600) in " + _web_token() if os.path.isfile(_web_token()) else "none yet"))
