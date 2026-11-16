@@ -627,12 +627,14 @@ def cmd_start(args):
     if corre() and modo_previo and modo_previo != modo:
         di("mode changed (%s -> %s): restarting the building; the director comes back with the new Claude" % (modo_previo, modo))
         para_todo()
+    os.makedirs(os.path.join(pkg(), "estado"), exist_ok=True)
+    msg = crea_director(modo) if not corre() else None      # before the building starts: its demo rooms (contador, lector) never run, so they leave no files
     r = edificio("arranca")
     linea = (r.stdout.strip() or r.stderr.strip()).splitlines()[-1] if (r.stdout or r.stderr).strip() else "start: no output"
     di("building started" + (" (pid %d)" % corre()["pid"] if corre() else "") if "no hay ninguna" in linea else linea)   # the package says there is no page: now there is one
     if not corre():
         raise SystemExit("the building did not start; see %s" % os.path.join(pkg(), "edificio.log"))
-    msg = crea_director(modo)
+    msg = msg or crea_director(modo)
     wp = None if sin_web else arranca_web({puerto})
     escribe600(_estado(), json.dumps({"puerto": puerto, "web_puerto": wp, "modo": modo, "paquete_sha256": PAQUETE_SHA256, "modulo": VERSION_MODULO, "desde": int(time.time())}))
     if "--persistent" in args:
