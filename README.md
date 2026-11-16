@@ -4,6 +4,34 @@
 agent that people and other agents can talk to. A small Prolog engine decides every answer and explains it with its proof; the language model only
 translates between the client's words and facts, and puts the conclusion back into words. Website, concept and status: **https://logitration.com**
 
+## Local building: your own building of agents, in one command
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/building-dark.png">
+  <img alt="The local building's web screen: a floor plan with the rooms (director, contador, lector) and what each is doing, and a chat box to write to the director" src="docs/img/building-light.png">
+</picture>
+
+```
+pip install git+https://github.com/daradija/logitration     # or `pip install .` from a clone
+logi building start        # install + start (127.0.0.1 only) + create the `director` room + open its web screen
+```
+That is all: you get a **floor plan of rooms** (one agent per room, a `director` room first), what each one is doing, and a chat box to talk to the director. `logi building` also has `open`, `status`, `stop` and `uninstall`, and `start --no-open` prints the sign-in link instead of opening your browser. It asks only for your **Claude token** (from `claude setup-token`, typed hidden): no user name, no password. Without a token the director is **simulated** (no AI) and the screen says so. Requirements: Python 3.9+, and `claude` ([Claude Code](https://claude.ai/code)) in your PATH for a real director.
+
+### Details
+`logi building` gives you a small **local building of agents** on your own computer with one command, and a web screen to watch and talk to it: it installs the building package (bundled in this repo, checked against a fixed sha256) under `~/logi_edificio`, picks a free port, starts it **listening only on 127.0.0.1** (no connection to any server), creates a `director` room and starts a **web screen** for it.
+```
+logi building start             # install + start + director + web screen (opens your browser in an interactive terminal)
+logi building start --no-open   # same, but print the sign-in link instead of opening the browser
+logi building open              # open the web screen of a running building (a new single-use link; --no-open only prints it)
+logi building status            # is it running, which mode, which port, which processes
+logi building stop              # stop it (only the processes it started, by saved pid)
+logi building uninstall         # stop and delete ~/logi_edificio and ~/.logi_edificio   (--keep-token keeps only the token)
+```
+The only thing it asks for is your **Claude token** (the one from `claude setup-token`): there is no user name and no password. The A2A agent card is at `http://127.0.0.1:PORT/.well-known/agent-card.json`. Other ways to give it: `--token-stdin`, the environment variable `CLAUDE_CODE_OAUTH_TOKEN` or `LOGI_EDIFICIO_TOKEN`, or an empty Enter to use your existing `claude login`. The token is kept in `~/.logi_edificio/token` (mode 600), never in argv, logs, the process environment or this repo. `--no-token` (or no token and no `claude` session) runs the director **simulated** (a fake `claude`, no AI), and says so. `--persistent` (macOS) also installs a LaunchAgent, only if `~/Library/LaunchAgents` is yours; `--port N` asks for a port.
+**The web screen.** `start` also runs a small web page (stdlib only, its own free port on `127.0.0.1`, never reachable from the network): the floor plan with the rooms and what each is doing, and a chat box to write to the `director` (or any room) and see what it answers. In an interactive terminal `start` opens it in your browser by itself (`--open` is the default there; `--no-open` or `LOGI_BUILDING_NO_OPEN=1` prevent it; with no terminal it only prints the link, `--open` forces it; `--no-web` skips the page). `logi building status` shows its URL.
+The page can send messages to your rooms, so it needs a **local access secret**: a random token created on the first `start`, stored in `~/.logi_edificio/web_token` (mode 600) and never put in argv, logs, the environment or a URL. It is not a user password: it is a secret between your browser and this process. `start` and `logi building open` make a **single-use sign-in link** (`http://127.0.0.1:PORT/?n=...`, valid 10 minutes); opening it sets an `HttpOnly`, `SameSite=Strict` cookie derived from the secret and shows the page. Without the cookie every page and API call answers 401, a request with an unexpected `Host` header is refused (DNS rebinding), a POST also needs a matching `Origin`, and there are no CORS headers. Other users of the same computer can reach the port but not the page, because they do not have the secret (the file is yours alone). Messages typed in the page go into the room's mailbox as coming from a person. If the swap guard holds the director back (it does while the computer uses more than 4096 MB of swap), the page says so and your message waits in its mailbox. A demo room only notes what you write; a simulated director only echoes in its terminal view.
+`start` is idempotent: running it again duplicates nothing. `logi edificio ...` is the same command. Test: `python tests/test_building.py` (21).
+
 ## Principles
 * **Logic decides, the model translates.** Rules and facts settle what is true and why (same input, same conclusion). The language model
   writes no Prolog and decides nothing; nothing a client writes is ever run as code. Every conclusion carries the rule and the facts behind it.
@@ -30,16 +58,7 @@ logi check examples/circuit.logi          # replay the file's conversation; exit
 logi serve examples/circuit.logi --port 8923      # A2A agent: card at http://localhost:8923/.well-known/agent-card.json
 ```
 
-**A local building with a director room, in one command** (see [Local building](#local-building)):
-```
-pip install git+https://github.com/daradija/logitration     # or `pip install .` from a clone
-logi building start        # install + start (127.0.0.1 only) + create the `director` room + open its web screen in your browser
-logi building open         # a new sign-in link for the web screen of a running building
-logi building status       # running? which port? web URL?
-logi building stop
-logi building uninstall    # stop and delete ~/logi_edificio and ~/.logi_edificio
-```
-It only asks for your Claude token (from `claude setup-token`, hidden): no user name, no password.
+The local building (`logi building start`) is described at the [top of this page](#local-building-your-own-building-of-agents-in-one-command).
 
 ## Examples
 ### I want to control an electric circuit: what do I write?
@@ -95,22 +114,6 @@ most(N, R) :- aggregate_all(max(C, M), capacity(M, R, C), max(_, N)).
 logi try examples/cluster.logi --observe
 logi serve examples/cluster.logi --observe --translator claude-cli --device ./launcher   # ./launcher gets "launch j1 n3"
 ```
-
-## Local building
-`logi building` gives you a small **local building of agents** on your own computer with one command: it installs the building package (bundled in this repo, checked against a fixed sha256) under `~/logi_edificio`, picks a free port, starts it **listening only on 127.0.0.1** (no connection to any server), creates a `director` room and starts a **web screen** for it.
-```
-pip install .                   # from a clone of this repo, or: pip install git+https://github.com/daradija/logitration
-logi building start             # install + start + director + web screen (opens your browser in an interactive terminal)
-logi building start --no-open   # same, but print the sign-in link instead of opening the browser
-logi building open              # open the web screen of a running building (a new single-use link; --no-open only prints it)
-logi building status            # is it running, which mode, which port, which processes
-logi building stop              # stop it (only the processes it started, by saved pid)
-logi building uninstall         # stop and delete ~/logi_edificio and ~/.logi_edificio   (--keep-token keeps only the token)
-```
-The only thing it asks for is your **Claude token** (the one from `claude setup-token`): there is no user name and no password. The A2A agent card is at `http://127.0.0.1:PORT/.well-known/agent-card.json`. Other ways to give it: `--token-stdin`, the environment variable `CLAUDE_CODE_OAUTH_TOKEN` or `LOGI_EDIFICIO_TOKEN`, or an empty Enter to use your existing `claude login`. The token is kept in `~/.logi_edificio/token` (mode 600), never in argv, logs, the process environment or this repo. `--no-token` (or no token and no `claude` session) runs the director **simulated** (a fake `claude`, no AI), and says so. `--persistent` (macOS) also installs a LaunchAgent, only if `~/Library/LaunchAgents` is yours; `--port N` asks for a port.
-**The web screen.** `start` also runs a small web page (stdlib only, its own free port on `127.0.0.1`, never reachable from the network): the floor plan with the rooms and what each is doing, and a chat box to write to the `director` (or any room) and see what it answers. In an interactive terminal `start` opens it in your browser by itself (`--open` is the default there; `--no-open` or `LOGI_BUILDING_NO_OPEN=1` prevent it; with no terminal it only prints the link, `--open` forces it; `--no-web` skips the page). `logi building status` shows its URL.
-The page can send messages to your rooms, so it needs a **local access secret**: a random token created on the first `start`, stored in `~/.logi_edificio/web_token` (mode 600) and never put in argv, logs, the environment or a URL. It is not a user password: it is a secret between your browser and this process. `start` and `logi building open` make a **single-use sign-in link** (`http://127.0.0.1:PORT/?n=...`, valid 10 minutes); opening it sets an `HttpOnly`, `SameSite=Strict` cookie derived from the secret and shows the page. Without the cookie every page and API call answers 401, a request with an unexpected `Host` header is refused (DNS rebinding), a POST also needs a matching `Origin`, and there are no CORS headers. Other users of the same computer can reach the port but not the page, because they do not have the secret (the file is yours alone). Messages typed in the page go into the room's mailbox as coming from a person. If the swap guard holds the director back (it does while the computer uses more than 4096 MB of swap), the page says so and your message waits in its mailbox. A demo room only notes what you write; a simulated director only echoes in its terminal view.
-Requirements: Python 3.9+; `claude` ([Claude Code](https://claude.ai/code)) in your PATH for a real director. `start` is idempotent: running it again duplicates nothing. `logi edificio ...` is the same command. Test: `python tests/test_building.py` (21).
 
 ## The three layers and the four meta-interpreters
 **Facts** (what is there), **rules** (what follows) and **meta-interpreters** (what runs *on* facts and rules): sections `== 2. facts`, `== 3. rules`, `== 4. meta-interpreters`.
