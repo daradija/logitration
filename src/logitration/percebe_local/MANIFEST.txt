@@ -1,0 +1,2 @@
+built by depura_percebe.py from the maintainer's screen; comments, internal paths, hosts, accounts and names removed.
+files: ajedrez_srv.py percebe.html percebe_local.py

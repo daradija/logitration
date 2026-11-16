@@ -62,7 +62,7 @@ try:
     check(rc == 0 and cfg2["a2a"]["puerto"] == port and list(cfg2["sesiones"]["fichas"]) == ["director"], "start again: same port, still one director", out)
     rc, out = logi("start", "--token-stdin")
     check(rc == 0 or "does not look like" in out, "--token-stdin with empty input does not crash", out)
-    # ---- web screen: loopback, access secret, single-use link, Origin/Host checks, message to the director
+    # ---- web screen (the building drawn as a street building): loopback, access secret, single-use link, Origin/Host/X-Clave checks, message to the director
     import re
     import urllib.error
     wp = st["web_puerto"]
@@ -82,7 +82,8 @@ try:
         except urllib.error.HTTPError as e:
             return e.code, e.read().decode(), e.headers
 
-    check(web("/")[0] == 401 and web("/api/state")[0] == 401, "web: no cookie -> 401")
+    check(web("/")[0] == 401 and web("/estado.json")[0] == 401, "web: no cookie -> 401")
+    check(web("/ping")[0] == 200, "web: /ping answers without the cookie (liveness only)")
     rc, out = logi("open", "--no-open")
     link = re.search(r"http://127\.0\.0\.1:%d/\?n=\S+" % wp, out)
     check(rc == 0 and bool(link), "open --no-open prints a single-use link", out)
@@ -92,15 +93,29 @@ try:
     check(c == 302 and "HttpOnly" in h.get("Set-Cookie", "") and "SameSite=Strict" in h.get("Set-Cookie", "") and secret not in cookie, "link: 302 + HttpOnly SameSite=Strict cookie, not the secret", h.get("Set-Cookie"))
     check(web(link.group(0)[len(base):])[0] == 401, "the link works only once")
     check(oct((Path(home) / ".logi_edificio" / "web_token").stat().st_mode & 0o777) == "0o600", "web_token is mode 600")
-    c, body, _ = web("/api/state", cookie)
-    check(c == 200 and "director" in body, "web: with the cookie /api/state -> 200 and lists the director")
-    check(web("/api/state", cookie, headers={"Host": "evil.example"})[0] == 421, "web: foreign Host -> 421")
-    msg = json.dumps({"room": "director", "text": "hello from the test"}).encode()
-    hdr = {"Content-Type": "application/json", "X-Requested-With": "logi"}
-    check(web("/api/send", cookie, "POST", msg, dict(hdr, Origin="http://evil.example"))[0] == 403, "web: POST with a foreign Origin -> 403")
-    check(web("/api/send", cookie, "POST", msg, dict(hdr, Origin=base))[0] == 200, "web: POST from the page -> 200")
-    c, body, _ = web("/api/room/director", cookie)
-    check(c == 200 and "hello from the test" in body, "web: the message shows in the director's chat")
+    c, body, _ = web("/", cookie)
+    check(c == 200 and "<title>Local building</title>" in body and "tú" in body, "web: with the cookie the building screen loads", body[:100])
+    c, body, _ = web("/estado.json", cookie)
+    est = json.loads(body) if c == 200 else {}
+    names = [a["nombre"] for a in est.get("agentes", [])]
+    check(c == 200 and "contador" in names and "lector" in names and est.get("plano", {}).get("0") == "director", "web: /estado.json lists the demo rooms and the director's room is on the floor plan", names)
+    check(web("/estado.json", cookie, headers={"Host": "evil.example"})[0] == 421, "web: foreign Host -> 421")
+    sid = next((a["sid"] for a in est.get("agentes", []) if a["nombre"] == "contador"), "")
+    clave = (Path(home) / "logi_edificio" / "web" / "cache" / "clave").read_text().strip()
+    msg = json.dumps({"sid": sid, "texto": "hello from the test", "autor": "user"}).encode()
+    check(web("/habla", cookie, "POST", msg, {"Origin": base})[0] == 403, "web: POST without the page key -> 403")
+    check(web("/habla", cookie, "POST", msg, {"X-Clave": clave, "Origin": "http://evil.example"})[0] == 403, "web: POST with a foreign Origin -> 403")
+    c, body, _ = web("/habla", cookie, "POST", msg, {"X-Clave": clave, "Origin": base})
+    check(c == 200 and json.loads(body).get("r"), "web: POST from the page -> 200 and a message id", body)
+    for _ in range(30):
+        c, body, _ = web("/charla?sid=" + sid, cookie)
+        ch = json.loads(body) if c == 200 else {}
+        if any(e.get("estado") in ("visto", "contestado") for e in ch.get("envios", [])):
+            break
+        time.sleep(0.5)
+    check(any(e.get("estado") in ("visto", "contestado") for e in ch.get("envios", [])), "web: the message reaches the room (seen or answered)", ch.get("envios"))
+    buz = (Path(home) / "logi_edificio" / "edificio_pyro" / "estado" / "contador.buzon.jsonl").read_text()
+    check("hello from the test" in buz, "web: the message is in the room's mailbox")
     rc, out = logi("stop")
     time.sleep(0.5)
     check(rc == 0 and "stopped" in out and get("http://127.0.0.1:%d/salud" % port) != 200, "stop: the port is free", out)

@@ -19,8 +19,10 @@ What `start` does (idempotent: running it again duplicates nothing and breaks no
      prompts you (hidden; the one from `claude setup-token`), or --token-stdin; empty Enter = use your `claude login` if there is a session,
      otherwise SIMULATED mode;
   5. starts the building, creates the `director` room (real Claude if there is a token or session; otherwise a FAKE claude, and it says so);
-  6. starts the WEB SCREEN of the building (floor plan, rooms, chat with the director) on 127.0.0.1 and a free port of its own, and opens it in your
-     browser when run from an interactive terminal (--open is the default there; --no-open prints the link instead; LOGI_BUILDING_NO_OPEN=1 never opens).
+  6. starts the WEB SCREEN: the building drawn as a street building (the `percebe` screen of the author's own building, cleaned for local use: floor plan,
+     rooms with their speech bubbles, chat with each room, pinned answers, play of each answer, notes, attachments) on 127.0.0.1 and a free port of its
+     own, plus a small mirror process that feeds it from the building's state files; it opens in your browser when run from an interactive terminal
+     (--open is the default there; --no-open prints the link instead; LOGI_BUILDING_NO_OPEN=1 never opens).
      Access needs a random local secret (~/.logi_edificio/web_token, mode 600; not a user password). The link that is opened is single use and expires.
 No LaunchAgent by default; --persistent writes a plist in ~/Library/LaunchAgents only if that directory is yours.
 The token: never in argv, logs, the `ps` environment or the plist: a 600 file, which the anchor hands to claude by file descriptor.
@@ -39,7 +41,7 @@ import sys
 import tarfile
 import time
 
-VERSION_MODULO = "1.1 (15-11-2026)"
+VERSION_MODULO = "1.2 (16-11-2026)"
 PAQUETE = "edificio_pyro_0.9.3.tar.gz"
 PAQUETE_SHA256 = "8b06a162cc20b5cb22fb17ed97be1fce8f62e3c03d92098effcbe8941adc0164"
 ETIQUETA_PLIST = "org.pyroboadvisor.edificio.logi"       # the building requires this prefix for its "supervisor"
@@ -172,18 +174,34 @@ def instala_paquete():
 
 CLAUDE_FALSO = r'''#!/usr/bin/env python3
 # SIMULATED claude of logi_edificio: no AI, no network. Only to see the building alive when there is no Claude token or session.
-import json, sys
+# It behaves like Claude in the one way the building relies on: it writes its conversation to ~/.claude/projects/<cwd>/<session-id>.jsonl
+# (a line for what you typed, a line for its reply), so messages go delivered -> seen -> answered and the reply shows up in the screen.
+import json, os, re, sys, time, uuid
 a = sys.argv[1:]
 if a[:1] == ["--version"]:
     print("0.0.0-simulated (logi_edificio)")
 elif a[:2] == ["auth", "status"]:
     print(json.dumps({"loggedIn": True, "authMethod": "simulated"}))
 else:
+    sid = next((a[i + 1] for i, x in enumerate(a[:-1]) if x in ("--session-id", "--resume")), uuid.uuid4().hex)
+    carpeta = os.path.join(os.path.expanduser("~"), ".claude", "projects", re.sub(r"[^A-Za-z0-9]", "-", os.getcwd()))
+    ruta = os.path.join(carpeta, sid + ".jsonl")
+    def apunta(tipo, msg, **extra):
+        os.makedirs(carpeta, exist_ok=True)
+        d = {"type": tipo, "message": msg, "uuid": uuid.uuid4().hex, "sessionId": sid, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime())}
+        d.update(extra)
+        with open(ruta, "a", encoding="utf-8") as f:
+            f.write(json.dumps(d, ensure_ascii=False) + "\n")
     print("[simulated] director without real Claude: give a token with `logi building start --token-stdin` or run `claude login`.", flush=True)
     for linea in sys.stdin:
-        linea = linea.strip()
+        linea = re.sub(r"\x1b\[20[01]~|\^\[\[20[01]~", "", linea).strip()
+        if linea in ("/exit", "/quit"):
+            break
         if linea:
             print("[simulated] received: " + linea[:200], flush=True)
+            apunta("user", {"role": "user", "content": linea}, origin={"kind": "human"}, turnOrigin="human", promptSource="typed")
+            time.sleep(0.4)
+            apunta("assistant", {"role": "assistant", "content": [{"type": "text", "text": "(simulated reply, no Claude) I received: " + linea[:300]}]})
 '''
 
 
@@ -231,6 +249,18 @@ def guarda_token(t):
     os.symlink(_token(), enlace)
 
 
+def enlaza_token_falso():
+    """Simulated mode: the building runs the director with its OWN isolated HOME (~/logi_edificio/edificio_pyro/sesiones/home), as it does with a real token,
+    so the fake claude never writes into the user's real ~/.claude. The 'token' is a dummy inside ~/logi_edificio; it is never in ~/.logi_edificio/token."""
+    falso = os.path.join(inst(), "falso", "token")
+    escribe600(falso, "simulated-no-claude\n")
+    enlace = os.path.join(pkg(), "mantenedor", "secretos", "token")
+    os.makedirs(os.path.dirname(enlace), mode=0o700, exist_ok=True)
+    if os.path.lexists(enlace):
+        os.remove(enlace)
+    os.symlink(falso, enlace)
+
+
 def quita_enlace_token():
     enlace = os.path.join(pkg(), "mantenedor", "secretos", "token")
     if os.path.islink(enlace):
@@ -274,9 +304,10 @@ def pids_propios():
                 d = lee_json(ruta, {})
                 if isinstance(d, dict) and isinstance(d.get("pid"), int):
                     cand.append(d["pid"])
-    d = lee_json(os.path.join(webdir(), "web.pid"), {})
-    if isinstance(d, dict) and isinstance(d.get("pid"), int):
-        cand.append(d["pid"])
+    for f in ("web.pid", "mirror.pid"):
+        d = lee_json(os.path.join(webdir(), f), {})
+        if isinstance(d, dict) and isinstance(d.get("pid"), int):
+            cand.append(d["pid"])
     ad = os.path.join(P, "estado")
     if os.path.isdir(ad):
         for f in os.listdir(ad):
@@ -362,15 +393,19 @@ def crea_director(modo):
 
 
 # ---------------------------------------------------------------- web screen (own process, own port, loopback, access secret)
-WEB_FILE = "edificio_web.py"
+WEB_FILE = "percebe_local.py"
+ESPEJO_FILE = "espejo_local.py"
+BUNDLE_DIR = "percebe_local"
 
 
 def web_bundled():
+    """(dir with the screen files, path of the mirror): next to this module."""
     aqui = os.path.dirname(os.path.abspath(__file__))
-    for n in (WEB_FILE, "logi_" + WEB_FILE):
-        if os.path.isfile(os.path.join(aqui, n)):
-            return os.path.join(aqui, n)
-    raise SystemExit("%s is missing next to this module" % WEB_FILE)
+    d = os.path.join(aqui, BUNDLE_DIR)
+    e = os.path.join(aqui, ESPEJO_FILE)
+    if not (os.path.isfile(os.path.join(d, WEB_FILE)) and os.path.isfile(e)):
+        raise SystemExit("%s/ or %s is missing next to this module" % (BUNDLE_DIR, ESPEJO_FILE))
+    return d, e
 
 
 def web_puerto_vivo():
@@ -386,44 +421,78 @@ def web_puerto_vivo():
         s.close()
 
 
+def espejo_vivo():
+    d = lee_json(os.path.join(webdir(), "mirror.pid"), {})
+    return d["pid"] if isinstance(d, dict) and isinstance(d.get("pid"), int) and pid_vivo(d["pid"]) and ESPEJO_FILE in comando(d["pid"]) else None
+
+
 def asegura_secreto_web():
     """Random access secret, created on the first start, mode 600; never in argv, logs, the environment or the plist."""
     if not (os.path.isfile(_web_token()) and len(open(_web_token()).read().strip()) >= 32):
         escribe600(_web_token(), secrets.token_urlsafe(32) + "\n")
 
 
-def arranca_web(evitar):
-    """Starts (or keeps) the web screen. Returns its port. The module is copied under ~/logi_edificio/web so the process is recognisably ours."""
-    asegura_secreto_web()
-    os.makedirs(webdir(), mode=0o700, exist_ok=True)
-    dest = os.path.join(webdir(), WEB_FILE)
-    nuevo = open(web_bundled(), "rb").read()
-    igual = os.path.isfile(dest) and open(dest, "rb").read() == nuevo
-    vivo = web_puerto_vivo()
-    if vivo and igual:
-        return vivo
-    if vivo:                                               # a different version is running: restart it
-        try:
-            os.kill(lee_json(os.path.join(webdir(), "web.pid"), {})["pid"], signal.SIGTERM)    # only the pid it saved (checked by web_puerto_vivo)
-        except (OSError, KeyError, TypeError):
-            pass
-        time.sleep(0.8)
-    with open(dest + ".tmp", "wb") as f:
+def _copia_si_distinto(origen, destino):
+    nuevo = open(origen, "rb").read()
+    if os.path.isfile(destino) and open(destino, "rb").read() == nuevo:
+        return False
+    with open(destino + ".tmp", "wb") as f:
         f.write(nuevo)
-    os.replace(dest + ".tmp", dest)
+    os.replace(destino + ".tmp", destino)
+    return True
+
+
+def _para_pid_guardado(ruta, fichero):
+    d = lee_json(ruta, {})
+    pid = d.get("pid") if isinstance(d, dict) else None
+    if isinstance(pid, int) and pid_vivo(pid) and fichero in comando(pid):     # only the pid it saved, checked by its command
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except OSError:
+            pass
+
+
+def arranca_web(evitar):
+    """Starts (or keeps) the web screen and its mirror. Returns the screen's port. The files are copied under ~/logi_edificio/web so the processes are
+    recognisably ours; everything the screen writes (pins, labels, notes, attachments) lives in ~/logi_edificio/web/cache."""
+    asegura_secreto_web()
+    W = webdir()
+    os.makedirs(W, mode=0o700, exist_ok=True)
+    fuente, espejo = web_bundled()
+    cambio = False
+    for f in sorted(os.listdir(fuente)):
+        if os.path.isfile(os.path.join(fuente, f)) and not f.startswith("."):
+            cambio |= _copia_si_distinto(os.path.join(fuente, f), os.path.join(W, f))
+    cambio |= _copia_si_distinto(espejo, os.path.join(W, ESPEJO_FILE))
+    vivo = web_puerto_vivo()
+    if vivo and not cambio and espejo_vivo():
+        return vivo
+    if vivo or espejo_vivo():                                  # a different version (or half a pair) is running: restart both
+        _para_pid_guardado(os.path.join(W, "web.pid"), WEB_FILE)
+        _para_pid_guardado(os.path.join(W, "mirror.pid"), ESPEJO_FILE)
+        time.sleep(0.8)
     for _ in range(5):
         puerto = puerto_libre()
         if puerto not in evitar:
             break
+    log = open(os.path.join(W, "web.log"), "a")
     e = entorno()
-    e.update(LOGI_WEB_PKG=pkg(), LOGI_WEB_SEG=seg(), LOGI_WEB_PORT=str(puerto))
-    log = open(os.path.join(webdir(), "web.log"), "a")
-    subprocess.Popen([sys.executable, dest], cwd=webdir(), env=e, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
-    for _ in range(50):
+    e.update(ESPEJO_ESTADO=os.path.join(pkg(), "estado"), ESPEJO_HOME=os.path.join(W, "home"), ESPEJO_CACHE=os.path.join(W, "cache"),
+             ESPEJO_CWD=os.path.join(inst(), "trabajo"))
+    os.makedirs(os.path.join(W, "home"), mode=0o700, exist_ok=True)
+    pe = subprocess.Popen([sys.executable, os.path.join(W, ESPEJO_FILE)], cwd=W, env=e, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
+    with open(os.path.join(W, "mirror.pid"), "w") as f:
+        json.dump({"pid": pe.pid}, f)
+    e = entorno()
+    e.update(LOGI_ESTADO=os.path.join(pkg(), "estado"), LOGI_PKG=pkg(), LOGI_WEB_SEG=seg(), LOGI_WEB_PIDFILE=os.path.join(W, "web.pid"), PERCEBE_PUERTO=str(puerto),
+             PERCEBE_CACHE=os.path.join(W, "cache"), PERCEBE_SESIONES=os.path.join(W, "home", ".claude", "sessions"),
+             PERCEBE_PROYECTOS=os.path.join(W, "home", ".claude", "projects"), PERCEBE_RAIZ=os.path.join(W, "raiz"))
+    subprocess.Popen([sys.executable, os.path.join(W, WEB_FILE)], cwd=W, env=e, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
+    for _ in range(80):
         if web_puerto_vivo() == puerto:
             return puerto
         time.sleep(0.1)
-    raise SystemExit("the web screen did not start; see %s" % os.path.join(webdir(), "web.log"))
+    raise SystemExit("the web screen did not start; see %s" % os.path.join(W, "web.log"))
 
 
 def enlace_web(puerto):
@@ -514,6 +583,7 @@ def cmd_start(args):
         quita_enlace_token()
     if modo == "simulated":
         claude = escribe_falso()
+        enlaza_token_falso()
     cf_act = (lee_json(os.path.join(pkg(), "config.json"), {}) or {}).get("a2a") or {}
     puerto = cf_act.get("puerto") if corre() and isinstance(cf_act.get("puerto"), int) else None     # already running: keep its port
     if not puerto:

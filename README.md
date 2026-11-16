@@ -7,15 +7,15 @@ translates between the client's words and facts, and puts the conclusion back in
 ## Local building: your own building of agents, in one command
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/img/building-dark.png">
-  <img alt="The local building's web screen: a floor plan with the rooms (director, contador, lector) and what each is doing, and a chat box to write to the director" src="docs/img/building-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/building-chat-dark.png">
+  <img alt="The local building's screen: the building drawn as a street building with one room per agent, and the chat of the director room with a pinned answer, the play button of each answer and the note recorder" src="docs/img/building-chat-light.png">
 </picture>
 
 ```
 pip install git+https://github.com/daradija/logitration     # or `pip install .` from a clone
 logi building start        # install + start (127.0.0.1 only) + create the `director` room + open its web screen
 ```
-That is all: you get a **floor plan of rooms** (one agent per room, a `director` room first), what each one is doing, and a chat box to talk to the director. `logi building` also has `open`, `status`, `stop` and `uninstall`, and `start --no-open` prints the sign-in link instead of opening your browser. It asks only for your **Claude token** (from `claude setup-token`, typed hidden): no user name, no password. Without a token the director is **simulated** (no AI) and the screen says so. Requirements: Python 3.9+, and `claude` ([Claude Code](https://claude.ai/code)) in your PATH for a real director.
+That is all: you get the **building drawn as a street building** (one room per agent, a `director` room first, a speech bubble in each room showing what it is doing), and a chat with every room: pin the answers you want to keep, play any answer aloud, record voice notes, attach files. `logi building` also has `open`, `status`, `stop` and `uninstall`, and `start --no-open` prints the sign-in link instead of opening your browser. It asks only for your **Claude token** (from `claude setup-token`, typed hidden): no user name, no password. Without a token the director is **simulated** (no AI) and the screen says so. Requirements: Python 3.9+, and `claude` ([Claude Code](https://claude.ai/code)) in your PATH for a real director.
 
 ### Details
 `logi building` gives you a small **local building of agents** on your own computer with one command, and a web screen to watch and talk to it: it installs the building package (bundled in this repo, checked against a fixed sha256) under `~/logi_edificio`, picks a free port, starts it **listening only on 127.0.0.1** (no connection to any server), creates a `director` room and starts a **web screen** for it.
@@ -28,9 +28,24 @@ logi building stop              # stop it (only the processes it started, by sav
 logi building uninstall         # stop and delete ~/logi_edificio and ~/.logi_edificio   (--keep-token keeps only the token)
 ```
 The only thing it asks for is your **Claude token** (the one from `claude setup-token`): there is no user name and no password. The A2A agent card is at `http://127.0.0.1:PORT/.well-known/agent-card.json`. Other ways to give it: `--token-stdin`, the environment variable `CLAUDE_CODE_OAUTH_TOKEN` or `LOGI_EDIFICIO_TOKEN`, or an empty Enter to use your existing `claude login`. The token is kept in `~/.logi_edificio/token` (mode 600), never in argv, logs, the process environment or this repo. `--no-token` (or no token and no `claude` session) runs the director **simulated** (a fake `claude`, no AI), and says so. `--persistent` (macOS) also installs a LaunchAgent, only if `~/Library/LaunchAgents` is yours; `--port N` asks for a port.
-**The web screen.** `start` also runs a small web page (stdlib only, its own free port on `127.0.0.1`, never reachable from the network): the floor plan with the rooms and what each is doing, and a chat box to write to the `director` (or any room) and see what it answers. In an interactive terminal `start` opens it in your browser by itself (`--open` is the default there; `--no-open` or `LOGI_BUILDING_NO_OPEN=1` prevent it; with no terminal it only prints the link, `--open` forces it; `--no-web` skips the page). `logi building status` shows its URL.
-The page can send messages to your rooms, so it needs a **local access secret**: a random token created on the first `start`, stored in `~/.logi_edificio/web_token` (mode 600) and never put in argv, logs, the environment or a URL. It is not a user password: it is a secret between your browser and this process. `start` and `logi building open` make a **single-use sign-in link** (`http://127.0.0.1:PORT/?n=...`, valid 10 minutes); opening it sets an `HttpOnly`, `SameSite=Strict` cookie derived from the secret and shows the page. Without the cookie every page and API call answers 401, a request with an unexpected `Host` header is refused (DNS rebinding), a POST also needs a matching `Origin`, and there are no CORS headers. Other users of the same computer can reach the port but not the page, because they do not have the secret (the file is yours alone). Messages typed in the page go into the room's mailbox as coming from a person. If the swap guard holds the director back (it does while the computer uses more than 4096 MB of swap), the page says so and your message waits in its mailbox. A demo room only notes what you write; a simulated director only echoes in its terminal view.
-`start` is idempotent: running it again duplicates nothing. `logi edificio ...` is the same command. Test: `python tests/test_building.py` (21).
+**The web screen.** `start` also runs the building's own screen, a local web page on its own free port of `127.0.0.1` (never reachable from the network). It is the screen the author uses for his own building (called *percebe*), cleaned for local use by a script (`depura_percebe.py`, in the author's repository, not here): the same floor plan with each room's speech bubble, the same chat. What it does here:
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/img/building-floor-dark.png">
+  <img alt="The building seen from the street: one room per agent with its speech bubble, your coin, and a message travelling between two rooms" src="docs/img/building-floor-light.png">
+</picture>
+
+- **Rooms.** One room per agent of the building; drag a room to another floor, rename a floor sign, change a room's icon, put a label on it. Drag your coin onto a room to talk to it. A room that is held by the building's swap guard, or closed, is drawn *without session* and says so.
+- **Chat.** Write to any room; the message goes to the room's mailbox as coming from you, and you see it go *pending, typed, seen, answered*. The answer shows in the room's bubble. Your last request stays fixed at the bottom with its state.
+- **Pin an answer** (the pin) to keep it at the top of the chat, with your question; pins survive a reload. **Play** (the triangle under each answer) reads it aloud with your browser's voice. **Record** (the round buttons next to the room name) records voice notes for a room and plays them back; notes are stored in `~/logi_edificio/web/cache`.
+- **Permissions.** If the director asks for a permission (Claude Code asks before it runs a command), the room turns red and the screen shows the question with its options; your answer goes to the room through its mailbox.
+- **Close / open a room.** The `...` menu of a room closes its session; clicking a room that has no session opens it again. Both use the building's own orders.
+
+What the author's own screen has and this one does **not**: the cluster, power, consumption and trading-account panels, the *Aula* courses and its podcast, the waiting-time games, the per-room web notes, relays by context, the other accounts' colours, the tmux windows (rooms here run in their own pty, not in tmux), and the remote buildings. They depend on the author's own machines and are removed.
+
+In an interactive terminal `start` opens it in your browser by itself (`--open` is the default there; `--no-open` or `LOGI_BUILDING_NO_OPEN=1` prevent it; with no terminal it only prints the link, `--open` forces it; `--no-web` skips it). `logi building status` shows its URL. A small mirror process (`espejo_local.py`) reads the building's state files every second and feeds the screen; it opens no socket. After a reboot run `logi building start` again (the optional LaunchAgent restarts the building, not the screen).
+The page can send messages to your rooms, so it needs a **local access secret**: a random token created on the first `start`, stored in `~/.logi_edificio/web_token` (mode 600) and never put in argv, logs, the environment or a URL. It is not a user password: it is a secret between your browser and this process. `start` and `logi building open` make a **single-use sign-in link** (`http://127.0.0.1:PORT/?n=...`, valid 10 minutes); opening it sets an `HttpOnly`, `SameSite=Strict` cookie derived from the secret and shows the page. Without the cookie every page, API call and event stream answers 401, a request with an unexpected `Host` header is refused (DNS rebinding), a POST also needs the page's own key and a matching `Origin`, and there are no CORS headers. Other users of the same computer can reach the port but not the page, because they do not have the secret (the file is yours alone). If the swap guard holds the director back (it does while the computer uses more than 4096 MB of swap), the screen says so and your message waits in its mailbox. A demo room only answers with fixed phrases; a simulated director answers `(simulated reply, no Claude) I received: ...`.
+`start` is idempotent: running it again duplicates nothing. `logi edificio ...` is the same command. Test: `python tests/test_building.py` (25).
 
 ## Principles
 * **Logic decides, the model translates.** Rules and facts settle what is true and why (same input, same conclusion). The language model
@@ -153,7 +168,7 @@ Every other line is Prolog. A predicate with rules is something clients **ask**;
 
 Options: `--translator simulated|claude-cli|anthropic-api` (default `simulated`: no model), `--model`, `--device PROGRAM`, `--observe`, `--program`.
 From Python: `load("examples/cluster.logi", translator=..., device=callable, observe=True)` returns a `LogicAgent` ([examples/python_api/](examples/python_api/)).
-Tests, no network, no model: `python tests/test_library.py` (103), `test_ideas.py` (93), `test_design.py` (69), `test_program.py` (77), `test_types.py` (53), `test_building.py` (11).
+Tests, no network, no model: `python tests/test_library.py` (103), `test_ideas.py` (93), `test_design.py` (69), `test_program.py` (77), `test_types.py` (53), `test_building.py` (25).
 Limits: `check` compares text, so with an LLM the wording may differ; `observe:` and `programs/` are the file author's code: trust the file.
 
 ## License
