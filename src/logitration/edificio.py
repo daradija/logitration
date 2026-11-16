@@ -400,7 +400,25 @@ def crea_director(modo):
     t = edificio("sesiones", "confianza", "director", "on")
     if t.returncode:
         raise SystemExit("director created, but could not mark it trusted: " + (t.stderr.strip().splitlines() or ["?"])[-1][:300])
-    return r.stdout.strip()[:200] + " (trusted: it can open other rooms)"
+    quita_salas_demo()
+    return r.stdout.strip()[:200] + " (trusted: it can open other rooms; the package's demo rooms are removed: only the director is left)"
+
+
+DEMO_SALAS = ("contador", "lector")
+
+
+def quita_salas_demo():
+    """The building package ships two demo rooms (contador, lector: fixed phrases, no AI). A real local building has only the director, so
+    right after the director is created they are removed with the building's own order (`borrar_agente`), without editing the package.
+    Only demo rooms (not a session, no task) and only here, when the director is first created: a later `start` never touches the user's rooms."""
+    codigo = ("import json,sys,edificio\n"
+              "for n in sys.argv[1:]:\n"
+              "    x = edificio.agentes_def().get(n)\n"
+              "    if isinstance(x, dict) and x.get('tipo') != 'sesion' and not x.get('tarea'):\n"
+              "        print(edificio.o_borrar({'nombre': n}))\n")
+    r = subprocess.run([sys.executable, "-c", codigo, *DEMO_SALAS], cwd=pkg(), env=entorno(), capture_output=True, text=True, timeout=120, stdin=subprocess.DEVNULL)
+    if r.returncode:
+        raise SystemExit("could not remove the demo rooms: " + (r.stderr.strip().splitlines() or ["?"])[-1][:300])
 
 
 # ---------------------------------------------------------------- web screen (own process, own port, loopback, access secret)

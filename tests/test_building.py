@@ -108,25 +108,35 @@ try:
     c, body, _ = web("/estado.json", cookie)
     est = json.loads(body) if c == 200 else {}
     names = [a["nombre"] for a in est.get("agentes", [])]
-    check(c == 200 and "contador" in names and "lector" in names and est.get("plano", {}).get("0") == "director", "web: /estado.json lists the demo rooms and the director's room is on the floor plan", names)
+    # the swap guard may hold the director back on a computer with much swap: then it has no session yet and is not in "agentes", but it is on the plan
+    check(c == 200 and names in ([], ["director"]) and est.get("plano") == {"0": "director"}, "web: ONLY the director room (no contador/lector demo rooms), on the floor plan", (names, est.get("plano")))
+    held = names != ["director"]
     check(web("/estado.json", cookie, headers={"Host": "evil.example"})[0] == 421, "web: foreign Host -> 421")
-    sid = next((a["sid"] for a in est.get("agentes", []) if a["nombre"] == "contador"), "")
-    clave = (Path(home) / "logi_edificio" / "web" / "cache" / "clave").read_text().strip()
-    msg = json.dumps({"sid": sid, "texto": "hello from the test", "autor": "user"}).encode()
-    check(web("/habla", cookie, "POST", msg, {"Origin": base})[0] == 403, "web: POST without the page key -> 403")
-    check(web("/habla", cookie, "POST", msg, {"X-Clave": clave, "Origin": "http://evil.example"})[0] == 403, "web: POST with a foreign Origin -> 403")
-    c, body, _ = web("/habla", cookie, "POST", msg, {"X-Clave": clave, "Origin": base})
-    check(c == 200 and json.loads(body).get("r"), "web: POST from the page -> 200 and a message id", body)
-    for _ in range(30):
-        c, body, _ = web("/charla?sid=" + sid, cookie)
-        ch = json.loads(body) if c == 200 else {}
-        if any(e.get("estado") in ("visto", "contestado") for e in ch.get("envios", [])):
-            break
-        time.sleep(0.5)
-    check(any(e.get("estado") in ("visto", "contestado") for e in ch.get("envios", [])), "web: the message reaches the room (seen or answered)", ch.get("envios"))
-    buz = (Path(home) / "logi_edificio" / "edificio_pyro" / "estado" / "contador.buzon.jsonl").read_text()
-    check("hello from the test" in buz, "web: the message is in the room's mailbox")
+    if held:
+        print('skip  message round trip (the swap guard holds the director on this computer)')
+    else:
+        sid = next((a["sid"] for a in est.get("agentes", []) if a["nombre"] == "director"), "")
+        clave = (Path(home) / "logi_edificio" / "web" / "cache" / "clave").read_text().strip()
+        msg = json.dumps({"sid": sid, "texto": "hello from the test", "autor": "user"}).encode()
+        check(web("/habla", cookie, "POST", msg, {"Origin": base})[0] == 403, "web: POST without the page key -> 403")
+        check(web("/habla", cookie, "POST", msg, {"X-Clave": clave, "Origin": "http://evil.example"})[0] == 403, "web: POST with a foreign Origin -> 403")
+        c, body, _ = web("/habla", cookie, "POST", msg, {"X-Clave": clave, "Origin": base})
+        check(c == 200 and json.loads(body).get("r"), "web: POST from the page -> 200 and a message id", body)
+        for _ in range(30):
+            c, body, _ = web("/charla?sid=" + sid, cookie)
+            ch = json.loads(body) if c == 200 else {}
+            if any(e.get("estado") in ("visto", "contestado") for e in ch.get("envios", [])):
+                break
+            time.sleep(0.5)
+        check(any(e.get("estado") in ("visto", "contestado") for e in ch.get("envios", [])), "web: the message reaches the room (seen or answered)", ch.get("envios"))
+        buz = (Path(home) / "logi_edificio" / "edificio_pyro" / "estado" / "director.buzon.jsonl").read_text()
+        check("hello from the test" in buz, "web: the message is in the room's mailbox")
     rc, out = logi("stop")
+    time.sleep(0.5)
+    rc2, out2 = logi("start", "--no-open", "--no-token")
+    pl = json.loads((Path(home) / "logi_edificio" / "edificio_pyro" / "estado" / "plano.json").read_text())
+    check(rc2 == 0 and sorted(pl.get("directivos", {}).values()) == ["director"], "restart: still only the director in the floor plan", pl)
+    logi("stop")
     time.sleep(0.5)
     check(rc == 0 and "stopped" in out and get("http://127.0.0.1:%d/salud" % port) != 200, "stop: the port is free", out)
     rc, out = logi("uninstall")
