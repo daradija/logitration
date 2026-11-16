@@ -46,7 +46,7 @@ Total: about 50 minutes of wall time, 5 rooms, 147 permission answers (every one
 ### Troubleshooting
 * **`pip install` ends with "Successfully installed UNKNOWN-0.0.0", and `logi` is not found.** Your pip is too old. Run `pip install --upgrade pip` (inside the venv) and install again.
 * **`logi: command not found`.** The venv is not active in this terminal: `. ~/logi-env/bin/activate`.
-* **"director: HELD by the building's swap guard".** The building does not start Claude while the computer uses more than 4096 MB of swap (it protects a computer that is already struggling). Close programs, or if you accept the risk raise the limit of *your copy*: `logi building stop && sed -i.bak 's/^SWAP_MAX_MB = 4096/SWAP_MAX_MB = 16384/' ~/logi_edificio/edificio_pyro/ancla.py && logi building start` (the line is in the installed copy, not in this repo; `uninstall` removes it).
+* **"director: HELD by the building's swap guard".** The building does not start Claude while the computer uses more than 4096 MB of swap (it protects a computer that is already struggling). Close programs, or if you accept the risk raise the limit of *your copy* above what your computer uses now (`sysctl vm.swapusage` on macOS, `free -m` on Linux), here to 32768 MB: `logi building stop && sed -i.bak 's/^SWAP_MAX_MB = 4096/SWAP_MAX_MB = 32768/' ~/logi_edificio/edificio_pyro/ancla.py && logi building start` (the saved token is reused; tested) (the line is in the installed copy, not in this repo; `uninstall` removes it).
 * **"the director will be SIMULATED".** `claude` is not in your PATH, or you gave no token. Install Claude Code, run `claude setup-token`, and run `logi building start` again.
 * **A room is red.** It asks for a permission: open it and answer (step 3 above).
 
