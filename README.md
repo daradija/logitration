@@ -43,6 +43,34 @@ You get the **building drawn as a street building** (one room per agent, a `dire
 
 Total: about 50 minutes of wall time, 5 rooms, 147 permission answers (every one by a person; the ones with `rm`, `sudo` or an outside path were denied). Three things the course does not tell you, because the rooms are not scripted: a room created with a narrow task refuses what is outside it (authorize it in its chat); a room that obeys "outside this folder you do not look" will ask you for the authorization; and a room that waits for another does not wake up by itself if the other one finishes while you are not watching: answer the cards. The figures are those of the simulator the agents built with Yahoo daily candles: **not real trading, not investment advice**, with look-ahead and survivorship biases that the rooms themselves declared.
 
+### Run without confirmations (bypass mode)
+
+By default the building asks for your yes on every command. If you want the director to work without asking, you can switch it to **bypass** mode. It is set with the building package and it is applied when the building is stopped and started again:
+
+```
+cd ~/logi_edificio/edificio_pyro
+python3 edificio.py sesiones modo director bypass
+python3 edificio.py sesiones confianza director bypass
+logi building stop
+logi building start
+```
+
+(`~/logi_edificio/edificio_pyro` is the folder that `logi building start` creates. `start` reuses the token you already gave it; add `--token-stdin` only if there is none yet or you want to replace it. Without a pipe, `--token-stdin` waits for input on stdin.)
+
+The second command (trust level `bypass`) is what lets the director open rooms in bypass too; without it they are born in default mode. Rooms created by the user through the interface are born in default mode. No room is ever in a higher mode than its director's own.
+
+**What has been tested and what has not**
+
+- Tested: a director in bypass with real Claude (Claude Code, sonnet) opened two rooms without asking for permissions. That test ran on another building (not `logi building`), with building package 0.6.9; the same code is in 0.9.3, not re-run there as such.
+- Deduced from the code, not tested: that the rooms the bypass director opens afterwards are born in bypass mode.
+- Not tested on Linux or Windows.
+- The building offers only `default` and `bypass`.
+
+**Warnings**
+
+- In bypass, everything that is not vetoed runs without asking (for example `python3` with network access, or reading almost any file). The building still vetoes `curl`, `wget`, `ssh`, `scp`, `sftp`, `rsync`, `nc`, `ncat`, `telnet`, `su`, `rm`, `kill`, `sudo`, `open`, and access to its own folder, token and settings, but these vetoes are **not a security barrier**.
+- Use it only on your own computer. The building listens on 127.0.0.1 only.
+
 ### Troubleshooting
 * **`pip install` ends with "Successfully installed UNKNOWN-0.0.0", and `logi` is not found.** Your pip is too old. Run `pip install --upgrade pip` (inside the venv) and install again.
 * **`logi: command not found`.** The venv is not active in this terminal: `. ~/logi-env/bin/activate`.
